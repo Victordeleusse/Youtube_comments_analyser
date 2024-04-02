@@ -30,6 +30,7 @@ def update_comments(video_ids: list, api_key: str):
     try:
         videos_messages = load_comments(video_ids, api_key)
         lw_messages = select_day_comments(videos_messages)
+        # return lw_messages
         append_to_blob(youtube_owner_name, lw_messages)
     except Exception as e:
         print(f"An error occurred! {e}")
@@ -38,7 +39,7 @@ def update_comments(video_ids: list, api_key: str):
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2021, 1, 1),
+    'start_date': datetime(2024, 4, 1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -50,7 +51,7 @@ dag = DAG(
     default_args=default_args,
     description='Update YouTube comments daily',
     # schedule_interval=timedelta(day=7),
-    schedule_interval='@daily',
+    schedule_interval='*/30 * * * *',
 )
 
 t1 = PythonOperator(
