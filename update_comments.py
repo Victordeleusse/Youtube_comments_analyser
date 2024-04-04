@@ -58,14 +58,26 @@ def analyze_sentiment_for_text(text):
 
 def analyze_overall_sentiment(bucket_name, **context):
     blob_names = context['task_instance'].xcom_pull(task_ids='update_comments')
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob_result = bucket.blob("result")
+    if blob_result.exists():
+        blob_result.delete()
+    sentiments_results = {}
     for blob_name in blob_names:
         comments = load_comments_from_blob(bucket_name, blob_name)
         sentiment_scores = [analyze_sentiment_for_text(comment) for comment in comments]
+        video_name = ' '.join(blob_name.split('.')[0].split('_')).capitalize()
         if sentiment_scores:
             average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
-            print(f"Average feeling for the {len(comments)} comments: {average_sentiment}")
+            sentiments_results[video_name] = average_sentiment
         else:
-            print("No comment to analyse.")
+            sentiments_results[video_name] = "No comment to analyse."
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob_result = bucket.blob("result")
+    blob_result.upload_from_string(json.dumps(sentiments_results), content_type='application/json')
+
 
 default_args = {
     "owner": "airflow",
