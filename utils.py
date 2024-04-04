@@ -63,15 +63,19 @@ def load_comments(video_ids: list, api_key: str):
 # First upload to GCS : 
 #   - The bucket has been created through Terraform script
 #   - Creation of the "video blob"
-def upload_to_gcs(bucket_name, videos_messages: dict):
+def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
+    videos_messages = load_comments(video_ids, api_key)
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     for video_name, messages in videos_messages.items():
         destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
         blob = bucket.blob(destination_blob_name)
-        data_string = json.dumps([message.__dict__ for message in messages])
-        blob.upload_from_string(data_string, content_type='application/json')
-        print(f"Data uploaded to {destination_blob_name}.")
+        if blob.exists():
+            print(f"Le blob {destination_blob_name} existe déjà, passage à la vidéo suivante.")
+        else:
+            data_string = json.dumps([message.__dict__ for message in messages])
+            blob.upload_from_string(data_string, content_type='application/json')
+            print(f"Data uploaded to {destination_blob_name}.")
     
 def get_prw_week():
     today = date.today()
