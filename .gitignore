@@ -17,3 +17,6 @@ terraform/sql_database/.terraform
 terraform/sql_database/.terraform.lock.hcl
 terraform/sql_database/terraform.tfstate
 terraform/sql_database/terraform.tfstate.backup
+
+google-cloud-cli-471.0.0-linux-x86_64.tar.gz
+google-cloud-sdk
