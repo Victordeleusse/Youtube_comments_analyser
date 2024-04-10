@@ -1,10 +1,10 @@
-# .env
+.env
 .DS_Store
 my_env
 airflow_env
 __pycache__
-# Notes.txt
-# youtubereviews-418617-7497fbcacee2.json
+Notes.txt
+youtubereviews-418617-7497fbcacee2.json
 
 terraform/cloud_storage/youtubereviews-418617-7497fbcacee2.json
 terraform/cloud_storage/.terraform
