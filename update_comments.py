@@ -29,9 +29,7 @@ def append_to_blob(youtube_owner_name, new_data: dict, **context):
             existing_data_json.append(new_video_comments)
             updated_data = json.dumps(existing_data_json)
             blob.upload_from_string(updated_data, content_type="application/json")
-    print(
-        f"Blob {blob_name} in the bucket {youtube_owner_name} has been updated with new data."
-    )
+    print(f"Blob {blob_name} in the bucket {youtube_owner_name} has been updated with new data.")
 
 def update_comments(video_ids: list, api_key: str):
     try:
@@ -43,40 +41,40 @@ def update_comments(video_ids: list, api_key: str):
         print(f"An error occurred! {e}")
     pass
 
-def load_comments_from_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    data = json.loads(blob.download_as_string())
-    return [comment["text"] for comment in data]
+# def load_comments_from_blob(bucket_name, blob_name):
+#     storage_client = storage.Client()
+#     bucket = storage_client.bucket(bucket_name)
+#     blob = bucket.blob(blob_name)
+#     data = json.loads(blob.download_as_string())
+#     return [comment["text"] for comment in data]
 
-def analyze_sentiment_for_text(text):
-    client = language_v1.LanguageServiceClient()
-    document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)
-    sentiment = client.analyze_sentiment(request={'document': document}).document_sentiment
-    return sentiment.score
+# def analyze_sentiment_for_text(text):
+#     client = language_v1.LanguageServiceClient()
+#     document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)
+#     sentiment = client.analyze_sentiment(request={'document': document}).document_sentiment
+#     return sentiment.score
 
-def analyze_overall_sentiment(bucket_name, **context):
-    blob_names = context['task_instance'].xcom_pull(task_ids='update_comments')
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob_result = bucket.blob("result")
-    if blob_result.exists():
-        blob_result.delete()
-    sentiments_results = {}
-    for blob_name in blob_names:
-        comments = load_comments_from_blob(bucket_name, blob_name)
-        sentiment_scores = [analyze_sentiment_for_text(comment) for comment in comments]
-        video_name = ' '.join(blob_name.split('.')[0].split('_')).capitalize()
-        if sentiment_scores:
-            average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
-            sentiments_results[video_name] = average_sentiment
-        else:
-            sentiments_results[video_name] = "No comment to analyse."
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob_result = bucket.blob("result")
-    blob_result.upload_from_string(json.dumps(sentiments_results), content_type='application/json')
+# def analyze_overall_sentiment(bucket_name, **context):
+#     blob_names = context['task_instance'].xcom_pull(task_ids='update_comments')
+#     storage_client = storage.Client()
+#     bucket = storage_client.bucket(bucket_name)
+#     blob_result = bucket.blob("result")
+#     if blob_result.exists():
+#         blob_result.delete()
+#     sentiments_results = {}
+#     for blob_name in blob_names:
+#         comments = load_comments_from_blob(bucket_name, blob_name)
+#         sentiment_scores = [analyze_sentiment_for_text(comment) for comment in comments]
+#         video_name = ' '.join(blob_name.split('.')[0].split('_')).capitalize()
+#         if sentiment_scores:
+#             average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+#             sentiments_results[video_name] = average_sentiment
+#         else:
+#             sentiments_results[video_name] = "No comment to analyse."
+#     storage_client = storage.Client()
+#     bucket = storage_client.bucket(bucket_name)
+#     blob_result = bucket.blob("result")
+#     blob_result.upload_from_string(json.dumps(sentiments_results), content_type='application/json')
 
 
 default_args = {
@@ -110,12 +108,12 @@ t1 = PythonOperator(
     dag=dag,
 )
 
-t2 = PythonOperator(
-    task_id="analyze_sentiment",
-    python_callable=analyze_overall_sentiment,
-    op_kwargs={"bucket_name": youtube_owner_name},
-    provide_context=True,
-    dag=dag,
-)
+# t2 = PythonOperator(
+#     task_id="analyze_sentiment",
+#     python_callable=analyze_overall_sentiment,
+#     op_kwargs={"bucket_name": youtube_owner_name},
+#     provide_context=True,
+#     dag=dag,
+# )
 
-t1 >> t2
+# t1 >> t2
