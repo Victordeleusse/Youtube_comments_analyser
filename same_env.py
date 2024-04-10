@@ -10,10 +10,12 @@ class Checker:
         dim1 = self.f1.shape[0]
         dim2 = self.f2.shape[0]
         unicity = []
+        package = []
         for i in range(dim1):
             unicity.append(self.f1.loc[i, 0])
+            package.append(self.f1.loc[i, 0].split('==')[0])
         for j in range(dim2):
-            if self.f2.loc[j, 0] not in unicity:
+            if self.f2.loc[j, 0].split('==')[0] not in package:
                 unicity.append(self.f2.loc[j, 0])
         return unicity
     
