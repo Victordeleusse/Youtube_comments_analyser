@@ -80,10 +80,10 @@ def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
 def get_prw_week():
     today = date.today()
     day_list = []
-    for i in range(0, 7):
+    for i in range(0, 9):
         day = today - timedelta(days=i)
         day_list.append(day.strftime("%Y-%m-%d"))
-    print(f"DAY LIST : {day_list}")
+    print(f"DAY PRW WEEK : {day_list}")
     return day_list
 
 def get_prw_day():
@@ -92,7 +92,7 @@ def get_prw_day():
     for i in range(0, 1):
         day = today - timedelta(days=i)
         day_list.append(day.strftime("%Y-%m-%d"))
-    print(f"DAY LIST : {day_list}")
+    # print(f"DAY LIST : {day_list}")
     return day_list
 
 # To select comments from the past week only 
@@ -117,3 +117,5 @@ def select_day_comments(videos_messages: dict):
                 prw_day_messages[video_name].append(message)
     return prw_day_messages
 
+# if __name__ == "__main__":
+#     get_prw_week()
