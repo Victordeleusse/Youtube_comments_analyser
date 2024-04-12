@@ -12,6 +12,20 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  
+  ollama_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=youtubereviews-418617-7497fbcacee2.json
+    volumes:
+      - .:/app
+      - youtubereviews-418617-7497fbcacee2.json:youtubereviews-418617-7497fbcacee2.json
+    depends_on:
+      - db
+
 
 volumes:
   postgres_data:
