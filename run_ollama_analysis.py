@@ -53,6 +53,7 @@ import ollama
 
 # def get_comments_to_row_string(bucket_name, video_ids: list):
 def test():
+    ollama.pull('llama2')
     response = ollama.chat(model='llama2', messages=[
     {'role': 'user',
     'content': 'Why is the sky blue?'},
