@@ -40,21 +40,31 @@ def get_channel_name(channel_id):
         return None
 
 # Load all comments from the video list
-def load_comments(video_ids: list, api_key: str):
+def load_comments(bucket_name, video_ids: list, api_key: str):
     try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
         videos_messages = {}
         for video in video_ids:
             video_name = get_video_info(video)[0]
             url = f"https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video}"
             response = requests.get(url)
             messages = []
+            max_index  = -1
             if response.status_code == 200:
+                destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
+                blob = bucket.blob(destination_blob_name)
+                if blob.exists():
+                    existing_data = blob.download_as_text()
+                    if existing_data:
+                        existing_data_json = json.loads(existing_data) if existing_data else []
+                        max_index = len(existing_data_json) - 1
                 data = response.json()
                 for index, item in enumerate(data['items']):
                     snippet = item['snippet']
                     topLevelComment = snippet['topLevelComment']
                     snippet2 = topLevelComment['snippet']
-                    messages.append(Message(index, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
+                    messages.append(Message(index + max_index + 1, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
             videos_messages[video_name] = messages
         return videos_messages
     except Exception as e:
@@ -80,10 +90,10 @@ def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
 def get_prw_week():
     today = date.today()
     day_list = []
-    for i in range(0, 7):
+    for i in range(0, 9):
         day = today - timedelta(days=i)
         day_list.append(day.strftime("%Y-%m-%d"))
-    print(f"DAY LIST : {day_list}")
+    print(f"DAY PRW WEEK : {day_list}")
     return day_list
 
 def get_prw_day():
@@ -92,7 +102,7 @@ def get_prw_day():
     for i in range(0, 1):
         day = today - timedelta(days=i)
         day_list.append(day.strftime("%Y-%m-%d"))
-    print(f"DAY LIST : {day_list}")
+    # print(f"DAY LIST : {day_list}")
     return day_list
 
 # To select comments from the past week only 
@@ -117,3 +127,5 @@ def select_day_comments(videos_messages: dict):
                 prw_day_messages[video_name].append(message)
     return prw_day_messages
 
+# if __name__ == "__main__":
+#     get_prw_week()
