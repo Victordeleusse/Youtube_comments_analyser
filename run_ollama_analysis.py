@@ -10,8 +10,35 @@ from utils import *
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
-api_key = os.getenv("KEY_API")
 youtube_owner_name = os.getenv("TF_VAR_NAME")
+
+def __is_model_available_locally(model_name):
+    try:
+        print(f"Retrieving model: {model_name}")
+        model = ollama.pull(model_name)
+        print(f"Model: {model_name} running")
+        return True
+    except Exception as e:
+        print(f"Model not found or an error occurred: {e}")
+        return False
+
+def check_if_model_is_available(model_name):
+    """
+    Ensures that the specified model is available locally.
+    If the model is not available, it attempts to pull it from the Ollama repository.
+    Args:
+        model_name (str): The name of the model to check.
+    Raises:
+        ollama.ResponseError: If there is an issue with pulling the model from the repository.
+    """
+    if not __is_model_available_locally(model_name):
+        try:
+            for progress in ollama.pull(model_name, stream=True):
+                digest = progress.get("digest", "")
+                if not digest:
+                    print(progress.get("status"))
+        except:
+            raise Exception(f"Unable to find model '{model_name}', please check the name and try again.")
 
 def comment_content(row_string: str):
     prompt = "As a youtube and langage expert, analyse this sentence where all comments for the video are separated by a " | " and provide a global sentiment for all these comments." + row_string
@@ -24,8 +51,9 @@ def comment_content(row_string: str):
     for chunk in stream:
         print(chunk['message']['content'], end='', flush=True)
 
-def get_comments_to_row_string(bucket_name, video_ids: list, api_key: str):
+def get_comments_to_row_string(bucket_name, video_ids: list):
     try:
+        check_if_model_is_available('llama2')
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
@@ -69,6 +97,6 @@ analyze_comments = PythonOperator(
         "video_ids": [os.getenv("VIDEO_ID_1")],
         "api_key": os.getenv("KEY_API"),
     },
-    provide_context=True,
+    # provide_context=True,
     dag=dag,
 )
