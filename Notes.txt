@@ -30,7 +30,8 @@ Airflow nécessite une base de données pour stocker son état et ses configurat
     --firstname victor \
     --lastname deleusse \
     --role Admin \
-    --email victordeleusse@gmail.com
+    --email victordeleusse@gmail.com \
+    --password 1234
 
 Password: 1234
 
@@ -45,7 +46,8 @@ Password: 1234
     --firstname victor \
     --lastname deleusse \
     --role Admin \
-    --email victordeleusse@gmail.com
+    --email victordeleusse@gmail.com \
+    --password 1234
 
 MISE A JOUR DES FICHIERS PYTHON DANS LE FOLDER ~/airflow/dags
  
