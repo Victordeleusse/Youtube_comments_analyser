@@ -89,7 +89,6 @@ dag = DAG(
     "update_youtube_comments",
     default_args=default_args,
     description="Update YouTube comments daily",
-    # schedule_interval=timedelta(day=7),
     schedule_interval="@daily",
     # schedule_interval="*/30 * * * *",
     catchup=False,

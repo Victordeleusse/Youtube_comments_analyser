@@ -2,6 +2,10 @@ import ollama
 import os
 from dotenv import load_dotenv
 from google.cloud import storage
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from datetime import datetime
+
 from utils import *
 
 load_dotenv()
@@ -38,3 +42,33 @@ def get_comments_to_row_string(bucket_name, video_ids: list, api_key: str):
                     comment_content(comments_one_str)    
     except Exception as e:
         print(f"An error occurred! {e}")
+
+default_args = {
+    "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": datetime(2024, 4, 11),
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+dag = DAG(
+    'youtube_comment_analysis',
+    default_args=default_args,
+    description='Analyze YouTube comments using Ollama',
+    schedule_interval='@daily',
+    catchup=False,
+)
+
+analyze_comments = PythonOperator(
+    task_id='analyze_youtube_comments',
+    python_callable=get_comments_to_row_string,
+    op_kwargs={
+        "bucket_name": os.getenv("TF_VAR_NAME"),
+        "video_ids": [os.getenv("VIDEO_ID_1")],
+        "api_key": os.getenv("KEY_API"),
+    },
+    provide_context=True,
+    dag=dag,
+)
