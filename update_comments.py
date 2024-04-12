@@ -24,10 +24,7 @@ def append_to_blob(youtube_owner_name, new_data: dict):
             # context['task_instance'].xcom_push(key=blob_name, value=blob_name)
             existing_data = blob.download_as_text()
             existing_data_json = json.loads(existing_data) if existing_data else []
-            new_video_comments = json.dumps(
-                [message.__dict__ for message in new_video_comments]
-            )
-            existing_data_json.append(new_video_comments)
+            existing_data_json.extend([message.__dict__ for message in new_video_comments])
             updated_data = json.dumps(existing_data_json)
             blob.upload_from_string(updated_data, content_type="application/json")
             print(f"Blob {blob_name} in the bucket {youtube_owner_name} has been updated with new data.")
