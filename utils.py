@@ -50,6 +50,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
             url = f"https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video}"
             response = requests.get(url)
             messages = []
+            max_index  = -1
             if response.status_code == 200:
                 destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
                 blob = bucket.blob(destination_blob_name)
@@ -63,7 +64,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
                     snippet = item['snippet']
                     topLevelComment = snippet['topLevelComment']
                     snippet2 = topLevelComment['snippet']
-                    messages.append(Message(index + max_index, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
+                    messages.append(Message(index + max_index + 1, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
             videos_messages[video_name] = messages
         return videos_messages
     except Exception as e:
