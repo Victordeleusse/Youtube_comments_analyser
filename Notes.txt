@@ -1,23 +1,42 @@
-1. TERRAFORM set up for SQL 
+1. ARCHITECTURE CLOUD 
 
-- Mise en place des variables d environnement dans le .env 
+Mise en place des variables d environnement dans le .env : Google Project + GCP config
+
+TERRAFORM set up
 Chargement des variables dans votre environnement actuel : ```source .env```
 - terraform init
 - terraform plan
 - terraform apply (-auto-approve)
 
-2. PREMIER EXPORT DES VIDEOS DE 
-L ADCC
+2. PREMIER EXPORT DES VIDEOS (et mise a jour des ID_i dans le .env) :  
+ADCC
 	- https://www.youtube.com/watch?v=UolTykPneHc&t=11s -> UolTykPneHc
 	- https://www.youtube.com/watch?v=wEn6ugcbGV8&t=360s -> wEn6ugcbGV8
 FLOWGRAPPLING
 	- https://www.youtube.com/watch?v=0smqvO2iQrE
 	- https://www.youtube.com/watch?v=vOKZpPQFVgY
+CORONAGYM
+    - https://www.youtube.com/watch?v=-eAazWm0uGI 
+
+EXECUTION DU main.py -> Creation du blob(s) pour stocker la data des videos 
 
 3. Installez Apache Airflow dans un nouvel environnement virtuel :
 (Ne pas oublier d'y joindre les differentes variables d'env necessaires au bon fonctionnement du projet : GCP-key.json ...)
 Airflow nécessite une base de données pour stocker son état et ses configurations. Pour une installation locale simple, vous pouvez utiliser SQLite -> de nombreux problemes sont apparus, notamment sur l execution simultanee lors du trigger d event, changement de database avec mise en place d un client SQL.
 - pip install apache-airflow
+
+- airflow users create \
+    --username victordeleusse \
+    --firstname victor \
+    --lastname deleusse \
+    --role Admin \
+    --email victordeleusse@gmail.com
+
+Password: 1234
+
+4. LANCEMENT DU SERVICE 
+
+"docker-compose up -d" -> lancement d une instance POSTGRESQL 
 
 - airflow db init
 
@@ -28,13 +47,14 @@ Airflow nécessite une base de données pour stocker son état et ses configurat
     --role Admin \
     --email victordeleusse@gmail.com
 
-Password: 1234
+MISE A JOUR DES FICHIERS PYTHON DANS LE FOLDER ~/airflow/dags
  
+Check si l environnement d Airflow est bien configure en demarrant le scheduler
+- airflow scheduler
+
 Démarrez le serveur web d'Airflow (accessible par défaut sur http://localhost:8080) :
 - airflow webserver --port 8080
 
-Check si l environnement d Airflow est bien configure en demarrant le scheduler
-- airflow scheduler
 
 # Exécution Manuelle : Pour un test immédiat, vous pouvez également déclencher manuellement l'exécution de votre DAG via l'interface utilisateur web d'Airflow ou en utilisant la commande CLI airflow dags trigger update_youtube_comments.
 

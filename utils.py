@@ -47,25 +47,34 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
         videos_messages = {}
         for video in video_ids:
             video_name = get_video_info(video)[0]
-            url = f"https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video}"
-            response = requests.get(url)
+            next_page_token = ''
             messages = []
-            max_index  = -1
-            if response.status_code == 200:
-                destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
-                blob = bucket.blob(destination_blob_name)
-                if blob.exists():
-                    existing_data = blob.download_as_text()
-                    if existing_data:
-                        existing_data_json = json.loads(existing_data) if existing_data else []
-                        max_index = len(existing_data_json) - 1
-                data = response.json()
-                for index, item in enumerate(data['items']):
-                    snippet = item['snippet']
-                    topLevelComment = snippet['topLevelComment']
-                    snippet2 = topLevelComment['snippet']
-                    messages.append(Message(index + max_index + 1, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
-            videos_messages[video_name] = messages
+            count = 0
+            while True:
+                url = f"https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video}&maxResults=100&pageToken={next_page_token}"
+                response = requests.get(url)
+                max_index  = -1
+                if response.status_code == 200:
+                    destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
+                    blob = bucket.blob(destination_blob_name)
+                    if blob.exists():
+                        existing_data = blob.download_as_text()
+                        if existing_data:
+                            existing_data_json = json.loads(existing_data) if existing_data else []
+                            max_index = len(existing_data_json) - 1
+                    data = response.json()
+                    for index, item in enumerate(data['items']):
+                        snippet = item['snippet']
+                        topLevelComment = snippet['topLevelComment']
+                        snippet2 = topLevelComment['snippet']
+                        messages.append(Message(index + max_index + 1 + count, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
+                    next_page_token = data.get('nextPageToken')
+                    if not next_page_token:
+                        break
+                    count += 100
+                else:
+                    break
+                videos_messages[video_name] = messages
         return videos_messages
     except Exception as e:
         print(f"An error occurred! {e}")
@@ -74,7 +83,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
 #   - The bucket has been created through Terraform script
 #   - Creation of the "video blob"
 def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
-    videos_messages = load_comments(video_ids, api_key)
+    videos_messages = load_comments(bucket_name, video_ids, api_key)
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     for video_name, messages in videos_messages.items():
@@ -83,7 +92,7 @@ def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
         if blob.exists():
             print(f"Le blob {destination_blob_name} existe déjà, passage à la vidéo suivante.")
         else:
-            data_string = json.dumps([message.__dict__ for message in messages])
+            data_string = json.dumps([message.__dict__ for message in messages], ensure_ascii=False).encode('utf-8')
             blob.upload_from_string(data_string, content_type='application/json')
             print(f"Data uploaded to {destination_blob_name}.")
     

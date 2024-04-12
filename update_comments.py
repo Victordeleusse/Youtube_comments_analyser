@@ -25,14 +25,14 @@ def append_to_blob(youtube_owner_name, new_data: dict):
             existing_data = blob.download_as_text()
             existing_data_json = json.loads(existing_data) if existing_data else []
             existing_data_json.extend([message.__dict__ for message in new_video_comments])
-            updated_data = json.dumps(existing_data_json)
+            updated_data = json.dumps(existing_data_json, ensure_ascii=False).encode('utf-8')
             blob.upload_from_string(updated_data, content_type="application/json")
             print(f"Blob {blob_name} in the bucket {youtube_owner_name} has been updated with new data.")
 
-def update_comments(video_ids: list, api_key: str):
+def update_comments(bucket_name, video_ids: list, api_key: str):
     try:
-        videos_messages = load_comments(video_ids, api_key)
-        lw_messages = select_week_comments(videos_messages)
+        videos_messages = load_comments(bucket_name, video_ids, api_key)
+        lw_messages = select_day_comments(videos_messages)
         # return(lw_messages)
         append_to_blob(youtube_owner_name, lw_messages)
     except Exception as e:
@@ -99,7 +99,9 @@ t1 = PythonOperator(
     task_id="update_comments",
     python_callable=update_comments,
     op_kwargs={
-        "video_ids": [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")],
+        # "video_ids": [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")],
+        "bucket_name": os.getenv("TF_VAR_NAME"),
+        "video_ids": [os.getenv("VIDEO_ID_1")],
         "api_key": os.getenv("KEY_API"),
     },
     provide_context=True,

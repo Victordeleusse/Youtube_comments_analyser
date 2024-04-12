@@ -1,2 +1,2 @@
-# Instagram_post_opinion
-Get the overall opinion on instagram publications and identify certain recurring behaviors.
+# YouTube video(s) general opinion and specific behaviour 
+Get the overall opinion on a video publications and identify certain recurring behaviors.
