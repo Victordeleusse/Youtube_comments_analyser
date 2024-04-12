@@ -40,8 +40,10 @@ def get_channel_name(channel_id):
         return None
 
 # Load all comments from the video list
-def load_comments(video_ids: list, api_key: str):
+def load_comments(bucket_name, video_ids: list, api_key: str):
     try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
         videos_messages = {}
         for video in video_ids:
             video_name = get_video_info(video)[0]
@@ -49,12 +51,19 @@ def load_comments(video_ids: list, api_key: str):
             response = requests.get(url)
             messages = []
             if response.status_code == 200:
+                destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
+                blob = bucket.blob(destination_blob_name)
+                if blob.exists():
+                    existing_data = blob.download_as_text()
+                    if existing_data:
+                        existing_data_json = json.loads(existing_data) if existing_data else []
+                        max_index = len(existing_data_json) - 1
                 data = response.json()
                 for index, item in enumerate(data['items']):
                     snippet = item['snippet']
                     topLevelComment = snippet['topLevelComment']
                     snippet2 = topLevelComment['snippet']
-                    messages.append(Message(index, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
+                    messages.append(Message(index + max_index, snippet2['textDisplay'], snippet2['authorDisplayName'], snippet2['authorChannelId']['value'], snippet2['publishedAt']))
             videos_messages[video_name] = messages
         return videos_messages
     except Exception as e:
