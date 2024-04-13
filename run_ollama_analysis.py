@@ -1,45 +1,36 @@
 import ollama
-# import os
-# from dotenv import load_dotenv
-# from google.cloud import storage
-# from airflow import DAG
-# from airflow.operators.python_operator import PythonOperator
-# from datetime import datetime
+import os
+from dotenv import load_dotenv
+from google.cloud import storage
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from datetime import datetime
 
-# from utils import *
+from utils import *
 
-# load_dotenv()
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
-# youtube_owner_name = os.getenv("TF_VAR_NAME")
+load_dotenv()
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
+youtube_owner_name = os.getenv("TF_VAR_NAME")
 
-# def __is_model_available_locally(model_name):
-#     try:
-#         print(f"Retrieving model: {model_name}")
-#         model = ollama.pull(model_name)
-#         print(f"Model: {model_name} running")
-#         return True
-#     except Exception as e:
-#         print(f"Model not found or an error occurred: {e}")
-#         return False
+def __is_model_available_locally(model_name: str) -> bool:
+    list = ollama.list()
+    print(f"Available model(s) : {list}")
+    if list:
+        models = []
+        for model in list['models']:
+            models.append(model['model'])
+        if model_name in models:
+            return True
+    return False
 
-# def check_if_model_is_available(model_name):
-#     """
-#     Ensures that the specified model is available locally.
-#     If the model is not available, it attempts to pull it from the Ollama repository.
-#     Args:
-#         model_name (str): The name of the model to check.
-#     Raises:
-#         ollama.ResponseError: If there is an issue with pulling the model from the repository.
-#     """
-#     if not __is_model_available_locally(model_name):
-#         try:
-#             for progress in ollama.pull(model_name, stream=True):
-#                 digest = progress.get("digest", "")
-#                 if not digest:
-#                     print(progress.get("status"))
-#         except:
-#             raise Exception(f"Unable to find model '{model_name}', please check the name and try again.")
 
+def check_if_model_is_available(model_name: str) -> None:
+    available = __is_model_available_locally(model_name)
+    if available == False:
+        print(f"Let s pull the model {model_name} first.")
+        ollama.pull(model_name, stream=True)
+    else:
+        print(f"The model {model_name} is already present locally.")
 # def comment_content(row_string: str):
 #     prompt = "As a youtube and langage expert, analyse this sentence where all comments for the video are separated by a " | " and provide a global sentiment for all these comments." + row_string
 
@@ -53,7 +44,10 @@ import ollama
 
 # def get_comments_to_row_string(bucket_name, video_ids: list):
 def test():
-    ollama.pull('llama2')
+    # available = __is_model_available_locally('llama2')
+    # if not available:
+    #     ollama.pull('llama2')
+    check_if_model_is_available('llama2:latest')
     response = ollama.chat(model='llama2', messages=[
     {'role': 'user',
     'content': 'Why is the sky blue?'},
@@ -108,5 +102,30 @@ def test():
 #     dag=dag,
 # )
 
-if __name__ == "__main__":
-    test()
+default_args = {
+    "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": datetime(2024, 4, 11),
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+dag = DAG(
+    'youtube_comment_analysis',
+    default_args=default_args,
+    description='Analyze YouTube comments using Ollama',
+    schedule_interval='@daily',
+    catchup=False,
+)
+
+analyze_comments = PythonOperator(
+    task_id='analyze_youtube_comments',
+    python_callable=test,
+    # provide_context=True,
+    dag=dag,
+)
+
+# if __name__ == "__main__":
+#     test()
