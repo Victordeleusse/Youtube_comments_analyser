@@ -7,10 +7,12 @@ from airflow.operators.python_operator import PythonOperator
 from datetime import datetime
 
 from utils import *
+from database_functions import *
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 youtube_owner_name = os.getenv("TF_VAR_NAME")
+
 
 def __is_model_available_locally(model_name: str) -> bool:
     list = ollama.list()
