@@ -37,7 +37,7 @@ Password: 1234
 
 4. LANCEMENT DU SERVICE 
 
-"docker-compose up -d" -> lancement d une instance POSTGRESQL 
+-   "docker-compose up -d" -> lancement d une instance POSTGRESQL 
 
 - airflow db init
 
