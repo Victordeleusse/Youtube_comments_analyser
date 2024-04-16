@@ -27,18 +27,17 @@ def __is_model_available_locally(model_name: str) -> bool:
 
 
 def check_if_model_is_available(model_name: str) -> None:
-    # available = __is_model_available_locally(model_name)
-    ollama.show('llama2')
-    # ollama.pull(model_name, stream=True)
-    # if available == False:
-    #     print(f"Let s pull the model {model_name} first.")
-    #     ollama.pull(model_name, stream=True)
-    # else:
-    #     print(f"The model {model_name} is already present locally.")
+    available = __is_model_available_locally(model_name)
+    ollama.pull(model_name, stream=True)
+    if available == False:
+        print(f"Let s pull the model {model_name} first.")
+        ollama.pull('llama2', stream=True)
+    else:
+        print(f"The model {model_name} is already present locally.")
 
 
 def comment_content(row_string: str):
-    prompt = "As a YouTube and language expert, analyze this sentence and categorize it as Positive, Negative or Neutral (only one of this word, Neutral if you don't know). If the message deals with drugs, steroids or racism, please add ALERT to your answer :" + row_string
+    prompt = "/set system As a YouTube and language expert, please categorize this followin sentence (Positive, Negative or Neutral ONLY) and add ALERT if it deals with drugs, steroids or racism (your answer must only contains one or two words): " + row_string
     stream = ollama.chat(
         model='llama2',
         messages=[{'role': 'user', 'content': prompt}],
@@ -50,13 +49,12 @@ def comment_content(row_string: str):
 
 def test():
     try:
-        ollama.pull("llama2")
-        check_if_model_is_available('llama2')
+        check_if_model_is_available('llama2:latest')
         with open('test.json', 'r') as file:
             existing_data_json = json.load(file)
             for message in existing_data_json:
                 comment = message["text"]
-                print("Analyzing comment: ", comment)
+                print("\n\nAnalyzing comment: ", comment)
                 comment_content(comment)
     except Exception as e:
         print(f"An error occurred: {e}")
