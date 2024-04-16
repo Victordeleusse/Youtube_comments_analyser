@@ -27,82 +27,59 @@ def __is_model_available_locally(model_name: str) -> bool:
 
 
 def check_if_model_is_available(model_name: str) -> None:
-    available = __is_model_available_locally(model_name)
-    if available == False:
-        print(f"Let s pull the model {model_name} first.")
-        ollama.pull(model_name, stream=True)
-    else:
-        print(f"The model {model_name} is already present locally.")
+    # available = __is_model_available_locally(model_name)
+    ollama.show('llama2')
+    # ollama.pull(model_name, stream=True)
+    # if available == False:
+    #     print(f"Let s pull the model {model_name} first.")
+    #     ollama.pull(model_name, stream=True)
+    # else:
+    #     print(f"The model {model_name} is already present locally.")
 
 
 def comment_content(row_string: str):
-    prompt = "As a youtube and langage expert, analyse this sentence where all comments for the video are separated by a " | " and please, send me the number of message you can count, and then provide a global sentiment for all these comments." + row_string
-
+    prompt = "As a YouTube and language expert, analyze this sentence and categorize it as Positive, Negative or Neutral (only one of this word, Neutral if you don't know). If the message deals with drugs, steroids or racism, please add ALERT to your answer :" + row_string
     stream = ollama.chat(
         model='llama2',
         messages=[{'role': 'user', 'content': prompt}],
         stream=True
     )
     for chunk in stream:
-        print(chunk['message']['content'], end='', flush=True)
+        if 'message' in chunk:
+            print(chunk['message']['content'], end='', flush=True)
 
-# def test():
-    # check_if_model_is_available('llama2:latest')
-    # response = ollama.chat(model='llama2', messages=[
-    # {'role': 'user',
-    # 'content': 'Why is the sky blue?'},
-    # ])
-    # print(response['message']['content'])
-    
-def get_comments_to_row_string(bucket_name, video_ids: list):
+def test():
     try:
-        check_if_model_is_available('llama2:latest')
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        for video in video_ids:
-            video_name = get_video_info(video)[0]
-            destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
-            blob = bucket.blob(destination_blob_name)
-            if blob.exists():
-                existing_data = blob.download_as_text()
-                if existing_data:
-                    existing_data_json = json.loads(existing_data) if existing_data else []
-                    comments_one_str = ''
-                    for message in existing_data_json:
-                        comments_one_str += message["text"] + " | "
-                    comment_content(comments_one_str)    
+        ollama.pull("llama2")
+        check_if_model_is_available('llama2')
+        with open('test.json', 'r') as file:
+            existing_data_json = json.load(file)
+            for message in existing_data_json:
+                comment = message["text"]
+                print("Analyzing comment: ", comment)
+                comment_content(comment)
     except Exception as e:
-        print(f"An error occurred! {e}")
-
-default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": datetime(2024, 4, 11),
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
-
-dag = DAG(
-    'youtube_comment_analysis',
-    default_args=default_args,
-    description='Analyze YouTube comments using Ollama',
-    schedule_interval='@daily',
-    catchup=False,
-)
-
-analyze_comments = PythonOperator(
-    task_id='analyze_youtube_comments',
-    python_callable=get_comments_to_row_string,
-    op_kwargs={
-        "bucket_name": os.getenv("TF_VAR_NAME"),
-        "video_ids": [os.getenv("VIDEO_ID_1")],
-        "api_key": os.getenv("KEY_API"),
-    },
-    # provide_context=True,
-    dag=dag,
-)
+        print(f"An error occurred: {e}")
+    
+# def get_comments_to_row_string(bucket_name, video_ids: list):
+#     try:
+#         check_if_model_is_available('llama2:latest')
+#         storage_client = storage.Client()
+#         bucket = storage_client.bucket(bucket_name)
+#         for video in video_ids:
+#             video_name = get_video_info(video)[0]
+#             destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
+#             blob = bucket.blob(destination_blob_name)
+#             if blob.exists():
+#                 existing_data = blob.download_as_text()
+#                 if existing_data:
+#                     existing_data_json = json.loads(existing_data) if existing_data else []
+#                     comments_one_str = ''
+#                     for message in existing_data_json:
+#                         comments_one_str += message["text"] + " | "
+#                     comment_content(comments_one_str)    
+#     except Exception as e:
+#         print(f"An error occurred! {e}")
 
 # default_args = {
 #     "owner": "airflow",
@@ -124,10 +101,16 @@ analyze_comments = PythonOperator(
 
 # analyze_comments = PythonOperator(
 #     task_id='analyze_youtube_comments',
-#     python_callable=test,
+#     python_callable=get_comments_to_row_string,
+#     op_kwargs={
+#         "bucket_name": os.getenv("TF_VAR_NAME"),
+#         "video_ids": [os.getenv("VIDEO_ID_1")],
+#         "api_key": os.getenv("KEY_API"),
+#     },
 #     # provide_context=True,
 #     dag=dag,
 # )
 
-# if __name__ == "__main__":
-#     test()
+
+if __name__ == "__main__":
+    test()
