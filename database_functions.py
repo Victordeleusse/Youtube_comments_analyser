@@ -5,13 +5,14 @@ import os
 
 load_dotenv()
 
-POSTGRES_USER = os.getenv('POSTGRES_USER')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-POSTGRES_DB = os.getenv('POSTGRES_DB')
-POSTGRES_HOST = os.getenv('POSTGRES_HOST')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT')
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
 POSTGRES_DB_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
 
 def connect_to_db():
     try:
@@ -21,62 +22,125 @@ def connect_to_db():
         print(f"An error as occured when trying to connect to the db : {e}")
         return None
 
+
 def insert_videos_in_db(video_author: str, video_title: str):
     try:
-        connector = connect_to_db()
-        cursor = connector.cursor()
-        table_name = 'videos_table'
-        query_table_exist = f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')"
-        cursor.execute(query_table_exist)
-        table_exists = cursor.fetchone()[0]
-        if table_exists:
-            print(f"Table '{table_name}' already exist in database.")
-        else:
-            print(f"Table '{table_name}' doesn't exist, let's generate it.")
-            query_create = f"CREATE TABLE {table_name} (video_id SERIAL PRIMARY KEY, video_author TEXT NOT NULL, video_title TEXT NOT NULL)"
-            cursor.execute(query_create)
-        query_video_already_in_table = f"SELECT COUNT(*) FROM {table_name} WHERE video_title = {video_title}"
-        count = cursor.execute(query_video_already_in_table)
-        if count > 0:
-            return
-        query_insert = f"INSERT INTO {table_name} VALUES {video_author} {video_title}"
-        cursor.execute(query_insert)
+        with connect_to_db() as conn:
+            with conn.cursor() as cursor:
+                table_name = "videos_table"
+                # Check if table exists
+                cursor.execute(
+                    sql.SQL(
+                        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"
+                    ),
+                    [table_name],
+                )
+                table_exists = cursor.fetchone()[0]
+                if not table_exists:
+                    print(f"Table {table_name} doesn't exist, creating it.")
+                    cursor.execute(
+                        sql.SQL(
+                            "CREATE TABLE {} (video_id SERIAL PRIMARY KEY, video_author TEXT NOT NULL, video_title TEXT NOT NULL)"
+                        ).format(sql.Identifier(table_name))
+                    )
+                # Check if the video already exists
+                cursor.execute(
+                    sql.SQL("SELECT COUNT(*) FROM {} WHERE video_title = %s").format(
+                        sql.Identifier(table_name)
+                    ),
+                    [video_title],
+                )
+                if cursor.fetchone()[0] == 0:
+                    cursor.execute(
+                        sql.SQL(
+                            "INSERT INTO {} (video_author, video_title) VALUES (%s, %s)"
+                        ).format(sql.Identifier(table_name)),
+                        [video_author, video_title],
+                    )
+                    print("Video inserted successfully.")
+                else:
+                    print("Video already exists in the database.")
+                conn.commit()
     except Exception as e:
-        print(f"An error as occured when trying to insert video in the db : {e}")
-        return None
+        print(f"An error occurred: {e}")
+        conn.rollback()
 
-def insert_bad_comments_in_db(video_title: str, alertNature: str, text: str, authorName: str, authorID: str, publishedAt: str):
+
+def insert_bad_comments_in_db(
+    video_title: str,
+    alertNature: str,
+    text: str,
+    authorName: str,
+    authorID: str,
+    publishedAt: str,
+):
     try:
-        connector = connect_to_db()
-        cursor = connector.cursor()
-        table_name = 'bad_comments_table'
-        query_table_exist = f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')"
-        cursor.execute(query_table_exist)
-        table_exists = cursor.fetchone()[0]
-        if table_exists:
-            print(f"Table '{table_name}' already exist in database.")
-        else:
-            print(f"Table '{table_name}' doesn't exist, let's generate it.")
-            query_create = f"CREATE TABLE {table_name} (comment_id SERIAL PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL, FOREIGN KEY (video_title) REFERENCES videos_table(video_title))"
-            cursor.execute(query_create)
-        query_insert = f"INSERT INTO {table_name} VALUES {video_title} {alertNature} {text} {authorName} {authorID} {publishedAt}"
-        cursor.execute(query_insert)
+        with connect_to_db() as conn:
+            with conn.cursor() as cursor:
+                table_name = "bad_comments_table"
+                # Check if table exists
+                cursor.execute(
+                    sql.SQL(
+                        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"
+                    ),
+                    [table_name],
+                )
+                table_exists = cursor.fetchone()[0]
+                if not table_exists:
+                    print(f"Table {table_name} doesn't exist, creating it.")
+                    cursor.execute(
+                        sql.SQL(
+                            "CREATE TABLE {} (comment_id SERIAL PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL, FOREIGN KEY (video_title) REFERENCES videos_table(video_title))"
+                        ).format(sql.Identifier(table_name))
+                    )
+                # Check if the comment already exists
+                cursor.execute(
+                    sql.SQL(
+                        "SELECT COUNT(*) FROM {} WHERE video_title = %s AND authorName = %s AND publishedAt = %s"
+                    ).format(sql.Identifier(table_name)),
+                    [video_title, authorName, publishedAt],
+                )
+                if cursor.fetchone()[0] == 0:
+                    cursor.execute(
+                        sql.SQL(
+                            "INSERT INTO {} (video_title, alertNature, text, authorName, authorID, publishedAt) VALUES (%s, %s, %s, %s, %s, %s)"
+                        ).format(sql.Identifier(table_name)),
+                        [
+                            video_title,
+                            alertNature,
+                            text,
+                            authorName,
+                            authorID,
+                            publishedAt,
+                        ],
+                    )
+                    print("Comment has been added to the database.")
+                    handle_bad_viewer_in_db(cursor, authorName, authorID)
+                else:
+                    print("Comment already exists in the database.")
+                conn.commit()
     except Exception as e:
-        print(f"An error as occured when trying to insert bad comment in the db : {e}")
-        return None
-    
-def handle_bad_viewer_in_db(cursor, authorName, authorID):
-    table_name = 'bad_viewers_table'
-    query_table_exist = f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')"
-    cursor.execute(query_table_exist)
-    table_exists = cursor.fetchone()[0]
-    if table_exists:
-        print(f"Table '{table_name}' already exist in database.")
-    else:
-        print(f"Table '{table_name}' doesn't exist, let's generate it.")
-        query_create = f"CREATE TABLE {table_name} (viewer_id SERIAL PRIMARY KEY, authorName TEXT NOT NULL, authorID TEXT NOT NULL, badCommentsCount INT, FOREIGN KEY (authorName) REFERENCES bad_comments_table(authorName))"
-        cursor.execute(query_create)
-    query_bad_viewer_exist = f"SELECT * FROM {table_name} WHERE authorName = {authorName})"
-    is_present = cursor.execute(query_bad_viewer_exist)
-    if is_present:
-        query_update_bad_viewer
+        print(f"An error occurred: {e}")
+        if conn:
+            conn.rollback()
+
+
+def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
+    try:
+        table_name = "bad_viewers"
+        cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"), [table_name])
+        table_exists = cursor.fetchone()[0]
+        if not table_exists:
+            cursor.execute(sql.SQL("CREATE TABLE {} (bad_viewer_id SERIAL PRIMARY KEY, authorName TEXT NOT NULL, authorID TEXT NOT NULL, count INT)").format(sql.Identifier(table_name)))
+            print(f"Table {table_name} created.")
+
+        cursor.execute(sql.SQL("SELECT count FROM {} WHERE authorName = %s").format(sql.Identifier(table_name)), [authorName])
+        result = cursor.fetchone()
+        if result:
+            new_count = result[0] + 1
+            cursor.execute(sql.SQL("UPDATE {} SET count = %s WHERE authorName = %s").format(sql.Identifier(table_name)), [new_count, authorName])
+        else:
+            cursor.execute(sql.SQL("INSERT INTO {} (authorName, authorID, count) VALUES (%s, %s, 1)").format(sql.Identifier(table_name)), [authorName, authorID])
+        print("Bad viewer record updated in the database.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
