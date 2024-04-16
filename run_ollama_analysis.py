@@ -19,8 +19,8 @@ def __is_model_available_locally(model_name: str) -> bool:
     print(f"Available model(s) : {list}")
     if list:
         models = []
-        for model in list['models']:
-            models.append(model['model'])
+        for model in list["models"]:
+            models.append(model["model"])
         if model_name in models:
             return True
     return False
@@ -31,26 +31,29 @@ def check_if_model_is_available(model_name: str) -> None:
     ollama.pull(model_name, stream=True)
     if available == False:
         print(f"Let s pull the model {model_name} first.")
-        ollama.pull('llama2', stream=True)
+        ollama.pull("llama2", stream=True)
     else:
         print(f"The model {model_name} is already present locally.")
 
 
 def comment_content(row_string: str):
-    prompt = "/set system As a YouTube and language expert, please categorize this followin sentence (Positive, Negative or Neutral ONLY) and add ALERT if it deals with drugs, steroids or racism (your answer must only contains one or two words): " + row_string
+    prompt = (
+        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral. Add ALERT if it involves drugs, steroids, or racism. Respond in one or two words only: "
+        + row_string
+    )
+
     stream = ollama.chat(
-        model='llama2',
-        messages=[{'role': 'user', 'content': prompt}],
-        stream=True
+        model="llama2", messages=[{"role": "user", "content": prompt}], stream=True
     )
     for chunk in stream:
-        if 'message' in chunk:
-            print(chunk['message']['content'], end='', flush=True)
+        if "message" in chunk:
+            print(chunk["message"]["content"], end="", flush=True)
+
 
 def test():
     try:
-        check_if_model_is_available('llama2:latest')
-        with open('test.json', 'r') as file:
+        check_if_model_is_available("llama2:latest")
+        with open("test.json", "r") as file:
             existing_data_json = json.load(file)
             for message in existing_data_json:
                 comment = message["text"]
@@ -58,7 +61,8 @@ def test():
                 comment_content(comment)
     except Exception as e:
         print(f"An error occurred: {e}")
-    
+
+
 # def get_comments_to_row_string(bucket_name, video_ids: list):
 #     try:
 #         check_if_model_is_available('llama2:latest')
@@ -75,7 +79,7 @@ def test():
 #                     comments_one_str = ''
 #                     for message in existing_data_json:
 #                         comments_one_str += message["text"] + " | "
-#                     comment_content(comments_one_str)    
+#                     comment_content(comments_one_str)
 #     except Exception as e:
 #         print(f"An error occurred! {e}")
 
