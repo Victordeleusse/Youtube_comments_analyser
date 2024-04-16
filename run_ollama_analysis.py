@@ -38,7 +38,7 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral. Add ALERT if it involves drugs, steroids, or racism. Respond in one or two words only: "
+        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
         + row_string
     )
 
