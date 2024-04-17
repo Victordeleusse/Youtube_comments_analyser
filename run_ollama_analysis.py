@@ -37,7 +37,7 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
+        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
         + row_string
     )
 
@@ -47,17 +47,17 @@ def comment_content(row_string: str):
     for chunk in stream:
         if "message" in chunk:
             print(chunk["message"]["content"], end="", flush=True)
-            if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
-                return(2, chunk["message"]["content"])
-            elif "Negative" in chunk["message"]["content"]:
-                return(1, chunk["message"]["content"])
-            else:
-                return(0, None) 
+    if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
+        return(2, chunk["message"]["content"])
+    elif "Negative" in chunk["message"]["content"]:
+        return(1, chunk["message"]["content"])
+    else:
+        return(0, None) 
 
 
 def test():
     try:
-        check_if_model_is_available('mistral:latest')
+        check_if_model_is_available('llama2:latest')
         print("NEW TEST")
         video_author = "Test_Corona"
         video_title = "test"
