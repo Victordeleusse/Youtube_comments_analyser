@@ -28,37 +28,50 @@ def __is_model_available_locally(model_name: str) -> bool:
 
 def check_if_model_is_available(model_name: str) -> None:
     available = __is_model_available_locally(model_name)
-    ollama.pull(model_name, stream=True)
     if available == False:
         print(f"Let s pull the model {model_name} first.")
-        ollama.pull("llama2", stream=True)
+        ollama.pull(model_name)
     else:
         print(f"The model {model_name} is already present locally.")
 
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
+        "As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
         + row_string
     )
 
     stream = ollama.chat(
-        model="llama2", messages=[{"role": "user", "content": prompt}], stream=True
+        model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
     )
     for chunk in stream:
         if "message" in chunk:
             print(chunk["message"]["content"], end="", flush=True)
+            if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
+                return(2, chunk["message"]["content"])
+            elif "Negative" in chunk["message"]["content"]:
+                return(1, chunk["message"]["content"])
+            else:
+                return(0, None) 
 
 
 def test():
     try:
-        check_if_model_is_available("llama2:latest")
-        with open("test.json", "r") as file:
+        check_if_model_is_available('mistral:latest')
+        print("NEW TEST")
+        video_author = "Test_Corona"
+        video_title = "test"
+        file_name = video_title + ".json"
+        with open(file_name, "r") as file:
+            insert_videos_in_db(video_author, video_title)
             existing_data_json = json.load(file)
             for message in existing_data_json:
                 comment = message["text"]
                 print("\n\nAnalyzing comment: ", comment)
-                comment_content(comment)
+                score, data = comment_content(comment)
+                if score == 2:
+                    alert_nature = data.split(":")[1][:-1]
+                    insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
     except Exception as e:
         print(f"An error occurred: {e}")
 
