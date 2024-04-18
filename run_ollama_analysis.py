@@ -13,7 +13,7 @@ load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
-ALERT = ["insult", "disrespect", "drug", "steroid", "racism", "Insult", "Disrespect", "Drug", "Steroid", "Racism"]
+ALERT = ["INSULT", "DISRESPECT", "DRUG", "STEROID", "RACISM", "INSULT"]
 
 
 def __is_model_available_locally(model_name: str) -> bool:
@@ -52,14 +52,15 @@ def comment_content(row_string: str):
             print(chunk["message"]["content"], end="", flush=True)
             parse_msg.append(chunk["message"]["content"])
     separator = '' 
-    msg = separator.join(parse_msg)
-    if "Negative" in msg:
-        if "ALERT!" in msg and not "None" in msg and not "NONE" in msg:
+    base_msg = separator.join(parse_msg)
+    msg = base_msg.upper()
+    if "NEGATIVE" in msg:
+        if "ALERT" in msg and not "NONE" in msg:
             return(2, msg)
         else:
             return(1, None)
-    if "Neutral" in msg:
-        if "ALERT!" in msg and not "None" in msg and not "NONE" in msg:
+    if "NEUTRAL" in msg:
+        if "ALERT" in msg and not "NONE" in msg:
             return(2, msg)
         else:
             return(0, None)
@@ -77,9 +78,9 @@ def classify_alert(message: str):
 
 def test():
     try:
-        clear_table('videos_table')
-        clear_table('bad_comments_table')
-        clear_table('bad_viewers')
+        # clear_table('videos_table')
+        # clear_table('bad_comments_table')
+        # clear_table('bad_viewers')
         check_if_model_is_available('mistral:latest')
         print("NEW TEST")
         video_author = "Test_Corona"
