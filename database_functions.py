@@ -62,7 +62,7 @@ def insert_videos_in_db(video_author: str, video_title: str):
                     print(f"Table {table_name} doesn't exist, creating it.")
                     cursor.execute(
                         sql.SQL(
-                            "CREATE TABLE {} (video_id SERIAL PRIMARY KEY, video_author TEXT NOT NULL, video_title TEXT NOT NULL)"
+                            "CREATE TABLE {} (video_id INT PRIMARY KEY, video_author TEXT NOT NULL, video_title TEXT NOT NULL)"
                         ).format(sql.Identifier(table_name))
                     )
                 # Check if the video already exists
@@ -73,11 +73,14 @@ def insert_videos_in_db(video_author: str, video_title: str):
                     [video_title],
                 )
                 if cursor.fetchone()[0] == 0:
+                    cursor.execute(sql.SQL("SELECT MAX(video_id) FROM {}").format(sql.Identifier(table_name)))
+                    result = cursor.fetchone()
+                    previous_id = result[0] if result[0] is not None else 0
                     cursor.execute(
                         sql.SQL(
-                            "INSERT INTO {} (video_author, video_title) VALUES (%s, %s)"
+                            "INSERT INTO {} (video_id, video_author, video_title) VALUES (%s, %s, %s)"
                         ).format(sql.Identifier(table_name)),
-                        [video_author, video_title],
+                        [previous_id + 1, video_author, video_title],
                     )
                     print("Video inserted successfully.")
                 else:
@@ -112,7 +115,7 @@ def insert_bad_comments_in_db(
                     print(f"Table {table_name} doesn't exist, creating it.")
                     cursor.execute(
                         sql.SQL(
-                            "CREATE TABLE {} (comment_id SERIAL PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL)"
+                            "CREATE TABLE {} (comment_id INT PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL)"
                         ).format(sql.Identifier(table_name))
                     )
                 # Check if the comment already exists
@@ -123,11 +126,16 @@ def insert_bad_comments_in_db(
                     [video_title, authorName, publishedAt],
                 )
                 if cursor.fetchone()[0] == 0:
+                    cursor.execute(sql.SQL(
+                            "SELECT MAX(comment_id) FROM {}").format(sql.Identifier(table_name)))
+                    result = cursor.fetchone()
+                    previous_id = result[0] if result[0] is not None else 0
                     cursor.execute(
                         sql.SQL(
-                            "INSERT INTO {} (video_title, alertNature, text, authorName, authorID, publishedAt) VALUES (%s, %s, %s, %s, %s, %s)"
+                            "INSERT INTO {} (comment_id, video_title, alertNature, text, authorName, authorID, publishedAt) VALUES (%s, %s, %s, %s, %s, %s, %s)"
                         ).format(sql.Identifier(table_name)),
                         [
+                            previous_id + 1,
                             video_title,
                             alertNature,
                             text,
@@ -153,7 +161,7 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
         cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"), [table_name])
         table_exists = cursor.fetchone()[0]
         if not table_exists:
-            cursor.execute(sql.SQL("CREATE TABLE {} (bad_viewer_id SERIAL PRIMARY KEY, authorName TEXT NOT NULL, authorID TEXT NOT NULL, count INT)").format(sql.Identifier(table_name)))
+            cursor.execute(sql.SQL("CREATE TABLE {} (bad_viewer_id INT PRIMARY KEY, authorName TEXT NOT NULL, authorID TEXT NOT NULL, count INT)").format(sql.Identifier(table_name)))
             print(f"Table {table_name} created.")
 
         cursor.execute(sql.SQL("SELECT count FROM {} WHERE authorName = %s").format(sql.Identifier(table_name)), [authorName])
@@ -162,7 +170,10 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
             new_count = result[0] + 1
             cursor.execute(sql.SQL("UPDATE {} SET count = %s WHERE authorName = %s").format(sql.Identifier(table_name)), [new_count, authorName])
         else:
-            cursor.execute(sql.SQL("INSERT INTO {} (authorName, authorID, count) VALUES (%s, %s, 1)").format(sql.Identifier(table_name)), [authorName, authorID])
+            cursor.execute(sql.SQL("SELECT MAX(bad_viewer_id) FROM {}").format(sql.Identifier(table_name)))
+            result = cursor.fetchone()
+            previous_id = result[0] if result[0] is not None else 0
+            cursor.execute(sql.SQL("INSERT INTO {} (bad_viewer_id, authorName, authorID, count) VALUES (%s, %s, %s, 1)").format(sql.Identifier(table_name)), [previous_id + 1, authorName, authorID])
         print("Bad viewer record updated in the database.")
     except Exception as e:
         print(f"An error occurred with bad viewer: {e}")
