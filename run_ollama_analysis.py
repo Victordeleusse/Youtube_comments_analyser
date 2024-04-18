@@ -76,29 +76,37 @@ def classify_alert(message: str):
     return alert_nature
 
 
-def test():
+def get_comments_to_row_string(bucket_name, video_ids: list):
     try:
         # clear_table('videos_table')
         # clear_table('bad_comments_table')
         # clear_table('bad_viewers')
         check_if_model_is_available('mistral:latest')
-        print("NEW TEST")
-        video_author = "Test_Corona"
-        video_title = "test"
-        file_name = video_title + ".json"
-        with open(file_name, "r") as file:
-            insert_videos_in_db(video_author, video_title)
-            existing_data_json = json.load(file)
-            for message in existing_data_json:
-                comment = message["text"]
-                print("\n\nAnalyzing comment: ", comment)
-                score, alert_msg = comment_content(comment)
-                if score == 2:
-                    alert_nature = classify_alert(alert_msg)
-                    print(f"ALERT NATURE : {alert_nature}")
-                    author = message["authorName"]
-                    print(f"AUTHOR : {author}")
-                    insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        for video in video_ids:
+            video_name = get_video_info(video)[0]
+            destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
+            blob = bucket.blob(destination_blob_name)
+            if blob.exists():
+                existing_data = blob.download_as_text()
+        # print("NEW TEST")
+        # video_author = "Test_Corona"
+        # video_title = "test"
+        # file_name = video_title + ".json"
+        # with open(file_name, "r") as file:
+                insert_videos_in_db(youtube_owner_name, video_name)
+                # existing_data_json = json.load(file)
+                for message in existing_data:
+                    comment = message["text"]
+                    print("\n\nAnalyzing comment: ", comment)
+                    score, alert_msg = comment_content(comment)
+                    if score == 2:
+                        alert_nature = classify_alert(alert_msg)
+                        print(f"ALERT NATURE : {alert_nature}")
+                        author = message["authorName"]
+                        print(f"AUTHOR : {author}")
+                        insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
         print(f"\n videos_table \n")
         read_table('videos_table')
         print(f"\n bad_comments_table \n")
