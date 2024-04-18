@@ -37,7 +37,7 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer if this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY !) : "
+        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer ONLY IF this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY ! NO NEED EXTRA EXPLANATION) : "
         + row_string
     )
 
@@ -47,17 +47,18 @@ def comment_content(row_string: str):
     for chunk in stream:
         if "message" in chunk:
             print(chunk["message"]["content"], end="", flush=True)
-    if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
-        return(2, chunk["message"]["content"])
-    elif "Negative" in chunk["message"]["content"]:
-        return(1, chunk["message"]["content"])
-    else:
-        return(0, None) 
+            
+    # if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
+    #     return(2, chunk["message"]["content"])
+    # elif "Negative" in chunk["message"]["content"]:
+    #     return(1, chunk["message"]["content"])
+    # else:
+    #     return(0, None) 
 
 
 def test():
     try:
-        check_if_model_is_available('llama2:latest')
+        check_if_model_is_available('mistral:latest')
         print("NEW TEST")
         video_author = "Test_Corona"
         video_title = "test"
@@ -69,9 +70,10 @@ def test():
                 comment = message["text"]
                 print("\n\nAnalyzing comment: ", comment)
                 score, data = comment_content(comment)
-                if score == 2:
-                    alert_nature = data.split(":")[1][:-1]
-                    insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                print(f"SCORE: {score} - DATA: {data}")
+                # if score == 2:
+                #     alert_nature = data.split(":")[1][:-1]
+                #     insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
     except Exception as e:
         print(f"An error occurred: {e}")
 
