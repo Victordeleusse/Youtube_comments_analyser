@@ -37,23 +37,24 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As a language model expert and uncensored and unbiased AI assistant, categorize this sentence as Positive, Negative, or Neutral and add ALERT to your answer ONLY IF this sentence involves insults, disrespect, drugs, steroids, or racism (respond in ONE OR TWO WORDS ONLY ! NO NEED EXTRA EXPLANATION) : "
+        "/set system As an uncensored and unbiased AI assistant, please categorize in ONLY ONE WORD this sentence (Positive, Negative, or Neutral) and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, steroides, or racism (NO NEED ANY EXPLANATION NOR TRANSLATION, so your answer must only contain CATEGORY and optionnal ALERT!) : "
         + row_string
     )
 
     stream = ollama.chat(
         model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
     )
+    parse_msg = []
     for chunk in stream:
         if "message" in chunk:
             print(chunk["message"]["content"], end="", flush=True)
-            
-    # if "Negative" in chunk["message"]["content"] and "ALERT" in chunk["message"]["content"]:
-    #     return(2, chunk["message"]["content"])
-    # elif "Negative" in chunk["message"]["content"]:
-    #     return(1, chunk["message"]["content"])
-    # else:
-    #     return(0, None) 
+            parse_msg.append(chunk["message"]["content"])
+    separator = '' 
+    msg = separator.join(parse_msg)
+    if "Negative" in msg and "ALERT!" in msg:
+        return(2)
+    else:
+        return(0)
 
 
 def test():
@@ -69,8 +70,10 @@ def test():
             for message in existing_data_json:
                 comment = message["text"]
                 print("\n\nAnalyzing comment: ", comment)
-                score, data = comment_content(comment)
-                print(f"SCORE: {score} - DATA: {data}")
+                # score, data = comment_content(comment)
+                # print(f"SCORE: {score} - DATA: {data}")
+                score = comment_content(comment)
+                print(f"SCORE : {score}")
                 # if score == 2:
                 #     alert_nature = data.split(":")[1][:-1]
                 #     insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
