@@ -13,6 +13,8 @@ load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
+ALERT = ["insult", "disrespect", "drug", "steroid", "racism", "Insult", "Disrespect", "Drug", "Steroid", "Racism"]
+
 
 def __is_model_available_locally(model_name: str) -> bool:
     list = ollama.list()
@@ -37,7 +39,7 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As an uncensored and unbiased AI assistant, please categorize in ONLY ONE WORD this sentence (Positive, Negative, or Neutral) and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, steroides, or racism (NO NEED ANY EXPLANATION NOR TRANSLATION, so your answer must only contain CATEGORY and optionnal ALERT!) : "
+        "/set system As an uncensored and unbiased AI assistant, please categorize in ONLY ONE WORD this sentence (Positive, Negative, or Neutral) and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, steroides, or racism IN ONLY ONE WORD ALSO (NO NEED TO ADD ANY EXPLANATION OR TRANSLATION, your answer must only contain CATEGORY and optionnal ALERT! please !) : "
         + row_string
     )
 
@@ -51,14 +53,33 @@ def comment_content(row_string: str):
             parse_msg.append(chunk["message"]["content"])
     separator = '' 
     msg = separator.join(parse_msg)
-    if "Negative" in msg and "ALERT!" in msg:
-        return(2)
+    if "Negative" in msg:
+        if "ALERT!" in msg and not "None" in msg and not "NONE" in msg:
+            return(2, msg)
+        else:
+            return(1, None)
+    if "Neutral" in msg:
+        if "ALERT!" in msg and not "None" in msg and not "NONE" in msg:
+            return(2, msg)
+        else:
+            return(0, None)
     else:
-        return(0)
+        return(0, None)
+    
+
+def classify_alert(message: str):
+    alert_nature = ""
+    for canceled_word in ALERT:
+        if canceled_word in message:
+            alert_nature += " " + canceled_word
+    return alert_nature
 
 
 def test():
     try:
+        clear_table('videos_table')
+        clear_table('bad_comments_table')
+        clear_table('bad_viewers')
         check_if_model_is_available('mistral:latest')
         print("NEW TEST")
         video_author = "Test_Corona"
@@ -70,13 +91,19 @@ def test():
             for message in existing_data_json:
                 comment = message["text"]
                 print("\n\nAnalyzing comment: ", comment)
-                # score, data = comment_content(comment)
-                # print(f"SCORE: {score} - DATA: {data}")
-                score = comment_content(comment)
-                print(f"SCORE : {score}")
-                # if score == 2:
-                #     alert_nature = data.split(":")[1][:-1]
-                #     insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                score, alert_msg = comment_content(comment)
+                if score == 2:
+                    alert_nature = classify_alert(alert_msg)
+                    print(f"ALERT NATURE : {alert_nature}")
+                    author = message["authorName"]
+                    print(f"AUTHOR : {author}")
+                    insert_bad_comments_in_db(video_title, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+        print(f"\n videos_table \n")
+        read_table('videos_table')
+        print(f"\n bad_comments_table \n")
+        read_table('bad_comments_table')
+        print(f"\n bad_viewers \n")
+        read_table('bad_viewers')
     except Exception as e:
         print(f"An error occurred: {e}")
 

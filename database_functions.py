@@ -21,7 +21,29 @@ def connect_to_db():
     except Exception as e:
         print(f"An error as occured when trying to connect to the db : {e}")
         return None
+    
+def read_table(table_name: str):
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name)))
+                rows = cursor.fetchall()
+                for row in rows:
+                    print(row)
+                cursor.close()
+            # conn.close()
+    except Exception as e:
+        print(f"An error as occured when reading {table_name} in the database : {e}")
 
+def clear_table(table_name: str):
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(table_name)))
+                cursor.close()
+            # conn.close()
+    except Exception as e:
+        print(f"An error as occured when deleting data from {table_name} in the database : {e}")
 
 def insert_videos_in_db(video_author: str, video_title: str):
     try:
@@ -90,7 +112,7 @@ def insert_bad_comments_in_db(
                     print(f"Table {table_name} doesn't exist, creating it.")
                     cursor.execute(
                         sql.SQL(
-                            "CREATE TABLE {} (comment_id SERIAL PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL, FOREIGN KEY (video_title) REFERENCES videos_table(video_title))"
+                            "CREATE TABLE {} (comment_id SERIAL PRIMARY KEY, video_title TEXT NOT NULL, alertNature TEXT NOT NULL, text TEXT NOT NULL, authorName TEXT NOT NULL, authorID TEXT NOT NULL, publishedAt TEXT NOT NULL)"
                         ).format(sql.Identifier(table_name))
                     )
                 # Check if the comment already exists
@@ -120,7 +142,7 @@ def insert_bad_comments_in_db(
                     print("Comment already exists in the database.")
                 conn.commit()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred with bad comment: {e}")
         if conn:
             conn.rollback()
 
@@ -143,4 +165,4 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
             cursor.execute(sql.SQL("INSERT INTO {} (authorName, authorID, count) VALUES (%s, %s, 1)").format(sql.Identifier(table_name)), [authorName, authorID])
         print("Bad viewer record updated in the database.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred with bad viewer: {e}")
