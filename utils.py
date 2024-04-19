@@ -47,6 +47,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
         videos_messages = {}
         for video in video_ids:
             video_name = get_video_info(video)[0]
+            print(f"VIDEO_NAME: {video_name}")
             next_page_token = ''
             messages = []
             count = 0
