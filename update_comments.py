@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from google.cloud import storage
-from google.cloud import language_v1
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator

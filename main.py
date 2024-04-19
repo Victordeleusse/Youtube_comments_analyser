@@ -1,5 +1,5 @@
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 import os
 # import argparse
@@ -20,6 +20,6 @@ youtube_owner_name = os.getenv("TF_VAR_NAME")
 if __name__ == "__main__":
     # args = parse_arguments()
     # video_ids = args.videos
-    print(f"video IDs : {video_ids}")
+    # print(f"video IDs : {video_ids}")
     first_upload_to_gcs(youtube_owner_name, video_ids, api_key)
     

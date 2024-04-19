@@ -90,6 +90,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
             blob = bucket.blob(destination_blob_name)
             if blob.exists():
                 existing_data = blob.download_as_text()
+                existing_data_json = json.loads(existing_data)
         # print("NEW TEST")
         # video_author = "Test_Corona"
         # video_title = "test"
@@ -97,7 +98,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
         # with open(file_name, "r") as file:
                 insert_videos_in_db(youtube_owner_name, video_name)
                 # existing_data_json = json.load(file)
-                for message in existing_data:
+                for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
                     score, alert_msg = comment_content(comment)

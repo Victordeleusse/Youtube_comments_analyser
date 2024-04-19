@@ -47,7 +47,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
         videos_messages = {}
         for video in video_ids:
             video_name = get_video_info(video)[0]
-            print(f"VIDEO_NAME: {video_name}")
+            video_name = video_name[:26]
             next_page_token = ''
             messages = []
             count = 0
@@ -64,6 +64,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
                             existing_data_json = json.loads(existing_data) if existing_data else []
                             max_index = len(existing_data_json) - 1
                     data = response.json()
+                    # print(data['items'])
                     for index, item in enumerate(data['items']):
                         snippet = item['snippet']
                         topLevelComment = snippet['topLevelComment']
@@ -75,7 +76,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
                     count += 100
                 else:
                     break
-                videos_messages[video_name] = messages
+        videos_messages[video_name] = messages
         return videos_messages
     except Exception as e:
         print(f"An error occurred! {e}")
@@ -85,6 +86,7 @@ def load_comments(bucket_name, video_ids: list, api_key: str):
 #   - Creation of the "video blob"
 def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
     videos_messages = load_comments(bucket_name, video_ids, api_key)
+    print(videos_messages)
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     for video_name, messages in videos_messages.items():
