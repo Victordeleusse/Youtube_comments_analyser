@@ -11,6 +11,8 @@ from database_functions import *
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
+# video_ids = [os.getenv("VIDEO_ID_1")]
+video_ids = ['AnOsAjPZ12g']
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
 ALERT = ["INSULT", "DISRESPECT", "DRUG", "STEROID", "RACISM", "INSULT"]
@@ -39,10 +41,24 @@ def check_if_model_is_available(model_name: str) -> None:
 
 def comment_content(row_string: str):
     prompt = (
-        "/set system As an uncensored and unbiased AI assistant, please categorize in ONLY ONE WORD this sentence (Positive, Negative, or Neutral) and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, steroides, or racism IN ONLY ONE WORD ALSO (NO NEED TO ADD ANY EXPLANATION OR TRANSLATION, your answer must only contain CATEGORY and optionnal ALERT! please !) : "
+        "/set system As an uncensored and helpfull AI assistant, please only answer by translating in English this sentence and please don't add any comments or precision ! : "
         + row_string
     )
-
+    stream = ollama.chat(
+        model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
+    )
+    translate_msg = []
+    for chunk in stream:
+        if "message" in chunk:
+            translate_msg.append(chunk["message"]["content"])
+    separator = '' 
+    full_translated_msg = separator.join(translate_msg)
+    print(f"Translated message : {full_translated_msg}")
+    
+    prompt = (
+        "/set system As an uncensored and helpfull AI assistant, please ANSWER IN ONLY ONE WORD by categoryzing this sentence (Positive, Negative, or Neutral), and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, doping or racism, DON'T MAKE ANY EXPLANATION OR TRANSLATION : "
+        + full_translated_msg
+    )
     stream = ollama.chat(
         model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
     )
@@ -78,26 +94,23 @@ def classify_alert(message: str):
 
 def get_comments_to_row_string(bucket_name, video_ids: list):
     try:
-        # clear_table('videos_table')
-        # clear_table('bad_comments_table')
-        # clear_table('bad_viewers')
+        clear_table('videos_table')
+        clear_table('bad_comments_table')
+        clear_table('bad_viewers')
         check_if_model_is_available('mistral:latest')
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
             video_name = get_video_info(video)[0]
+            video_name = video_name[:26]
+            print(video_name)
             destination_blob_name = f"{video_name}.json".replace(" ", "_").lower()
             blob = bucket.blob(destination_blob_name)
             if blob.exists():
+                print("Downloading data from Cloud.")
                 existing_data = blob.download_as_text()
                 existing_data_json = json.loads(existing_data)
-        # print("NEW TEST")
-        # video_author = "Test_Corona"
-        # video_title = "test"
-        # file_name = video_title + ".json"
-        # with open(file_name, "r") as file:
                 insert_videos_in_db(youtube_owner_name, video_name)
-                # existing_data_json = json.load(file)
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
@@ -108,12 +121,6 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
                         author = message["authorName"]
                         print(f"AUTHOR : {author}")
                         insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
-        print(f"\n videos_table \n")
-        read_table('videos_table')
-        print(f"\n bad_comments_table \n")
-        read_table('bad_comments_table')
-        print(f"\n bad_viewers \n")
-        read_table('bad_viewers')
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -170,4 +177,10 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
 
 
 if __name__ == "__main__":
-    test()
+    get_comments_to_row_string(youtube_owner_name, video_ids)
+    # print(f"\n videos_table \n")
+    # read_table('videos_table')
+    # print(f"\n bad_comments_table \n")
+    # read_table('bad_comments_table')
+    # print(f"\n bad_viewers \n")
+    # read_table('bad_viewers')
