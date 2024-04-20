@@ -3,6 +3,7 @@ from langchain_community.document_loaders import (
     PyPDFLoader,
     TextLoader,
 )
+import glob
 import os
 from typing import List
 from langchain_core.documents import Document
@@ -32,32 +33,25 @@ def load_documents_from_Files(path: str):
         raise FileNotFoundError(f"The specified path does not exist: {path}")
 
     loaders = {
-        ".pdf": DirectoryLoader(
-            path,
-            glob="**/*.pdf",
-            loader_cls=PyPDFLoader,
-            show_progress=True,
-            use_multithreading=True,
-        ),
-        ".md": DirectoryLoader(
-            path,
-            glob="**/*.md",
-            loader_cls=TextLoader,
-            show_progress=True,
-        ),
+        '.pdf': PyPDFLoader(),
+        '.md': TextLoader(),
     }
+    
     documents_names = []
     docs = {}
-    for file_type, loader in loaders.items():
-        print(f"Loading {file_type} files")
-        file_list = loader.file_list()
-        for file_path in file_list:
+    for file_ext, loader in loaders.items():
+        file_pattern = os.path.join(path, '**', '*' + file_ext)
+        for file_path in glob.glob(file_pattern, recursive=True):
             document_name = os.path.basename(file_path)
-            documents_names.append(document_name)
-            already_process = check_doc_in_db(document_name)
-            if not already_process:
-                document = loader.load(file_path)
-                docs[document_name] = document
+            if document_name not in documents_names:
+                documents_names.append(document_name)
+                if not check_doc_in_db(document_name):
+                    with open(file_path, 'rb') as file_content:
+                        if isinstance(loader, PyPDFLoader):
+                            document = loader.load(file_content) 
+                        elif isinstance(loader, TextLoader):
+                            document = loader.load(file_content.read().decode('utf-8'))
+                        docs[document_name] = document
     return docs, documents_names
 
 
