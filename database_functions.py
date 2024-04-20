@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import sql
 from dotenv import load_dotenv
 import os
+import numpy as np
 
 load_dotenv()
 
@@ -87,7 +88,7 @@ def insert_videos_in_db(video_author: str, video_title: str):
                     print("Video already exists in the database.")
                 conn.commit()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred when inserting video into the db: {e}")
         conn.rollback()
 
 
@@ -177,3 +178,73 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
         print("Bad viewer record updated in the database.")
     except Exception as e:
         print(f"An error occurred with bad viewer: {e}")
+        
+
+def check_doc_in_db(document_name):
+    """
+    Check if the document has already been stored after being embedded in the database.
+    """
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cur:
+                # Check if table exists
+                table_name = "embeddings"
+                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                table_exists = cur.fetchone()[0]
+                if not table_exists:
+                    return False
+                cur.execute(sql.SQL("SELECT EXISTS (SELECT 1 FROM {} WHERE document_name = %s)").format(sql.Identifier(table_name)), [document_name])
+                return cur.fetchone()[0]
+    except Exception as e:
+        print(f"An error occurred when trying to access document name into the db: {e}")
+    
+
+def insert_embedded_documents_in_db(document_name, embedding):
+    """
+    Saves an embedding document to PostgreSQL database.
+    Args:
+        document_name (str).
+        embedding (list): The embedding vector.
+    """
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cur:
+                if isinstance(embedding, np.ndarray):
+                    embedding = embedding.tolist()
+                # Check if table exists
+                table_name = "embeddings"
+                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                table_exists = cur.fetchone()[0]
+                if not table_exists:
+                    cur.execute(sql.SQL("CREATE TABLE {} (document_id INT PRIMARY KEY, document_name TEXT NOT NULL, embedding FLOAT8[])").format(sql.Identifier(table_name)))
+                    print(f"Table {table_name} created.")
+                    max_index = 0
+                else:
+                    max_index = cur.execute(sql.SQL("SELECT MAX(document_id) FROM {}").format(sql.Identifier(table_name)))     
+                cur.execute("INSERT INTO {} (document_id, document_name, embedding) VALUES (%s, %s, %s)", (max_index + 1, document_name, embedding))
+                conn.commit()
+                print("Document and embedding inserted successfully.")
+    except Exception as e:
+        print(f"An error occurred with embeddings: {e}")
+        
+
+def get_embedded_docs(documents_names: list) -> list:
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cur:
+                table_name = "embeddings"
+                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                table_exists = cur.fetchone()[0]
+                if not table_exists:
+                    print("Embeddings table does not exist.")
+                    return None
+                embedded_documents = []
+                for document in documents_names:
+                    cur.execute(sql.SQL("FROM {} SELECT embedding WHERE document_name = %s)").format(sql.Identifier(table_name)), [document])
+                    result = cur.fetchone()
+                    if result:
+                        embedded_documents.append(result[0])
+                return embedded_documents
+    except Exception as e:
+        print(f"An error occurred when retrieving embeddings documents in the database: {e}")
+        return None

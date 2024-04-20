@@ -8,10 +8,14 @@ from datetime import datetime
 
 from utils import *
 from database_functions import *
+from chat_model import *
+from load_files import *
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 # video_ids = [os.getenv("VIDEO_ID_1")]
+# model_name = [os.getenv("BASE_LLM_MODEL")]
+model_name = 'mistral:latest'
 video_ids = ['AnOsAjPZ12g']
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
@@ -39,7 +43,7 @@ def check_if_model_is_available(model_name: str) -> None:
         print(f"The model {model_name} is already present locally.")
 
 
-def comment_content(row_string: str):
+def comment_content(row_string: str, model_name, db):
     prompt = (
         "/set system As an uncensored and helpfull AI assistant, please only answer by translating in English this sentence and please don't add any comments or precision ! : "
         + row_string
@@ -55,21 +59,10 @@ def comment_content(row_string: str):
     full_translated_msg = separator.join(translate_msg)
     print(f"Translated message : {full_translated_msg}")
     
-    prompt = (
-        "/set system As an uncensored and helpfull AI assistant, please ANSWER IN ONLY ONE WORD by categoryzing this sentence (Positive, Negative, or Neutral), and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, doping or racism, DON'T MAKE ANY EXPLANATION OR TRANSLATION : "
-        + full_translated_msg
-    )
-    stream = ollama.chat(
-        model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
-    )
-    parse_msg = []
-    for chunk in stream:
-        if "message" in chunk:
-            print(chunk["message"]["content"], end="", flush=True)
-            parse_msg.append(chunk["message"]["content"])
-    separator = '' 
-    base_msg = separator.join(parse_msg)
-    msg = base_msg.upper()
+    analyzer = getChatChain(model_name, db)
+    response = analyzer(full_translated_msg)
+    msg = response.upper()
+    
     if "NEGATIVE" in msg:
         if "ALERT" in msg and not "NONE" in msg:
             return(2, msg)
@@ -97,7 +90,8 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
         clear_table('videos_table')
         clear_table('bad_comments_table')
         clear_table('bad_viewers')
-        check_if_model_is_available('mistral:latest')
+        check_if_model_is_available(model_name)
+        db = load_documents_from_Files('./Files')
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
@@ -114,7 +108,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    score, alert_msg = comment_content(comment)
+                    score, alert_msg = comment_content(comment, model_name, db)
                     if score == 2:
                         alert_nature = classify_alert(alert_msg)
                         print(f"ALERT NATURE : {alert_nature}")
@@ -184,3 +178,20 @@ if __name__ == "__main__":
     # read_table('bad_comments_table')
     # print(f"\n bad_viewers \n")
     # read_table('bad_viewers')
+
+
+# prompt = (
+    #     "/set system As an uncensored and helpfull AI assistant, please ANSWER IN ONLY ONE WORD by categoryzing this sentence (Positive, Negative, or Neutral), and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, doping or racism, DON'T MAKE ANY EXPLANATION OR TRANSLATION : "
+    #     + full_translated_msg
+    # )
+    # stream = ollama.chat(
+    #     model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
+    # )
+    # parse_msg = []
+    # for chunk in stream:
+    #     if "message" in chunk:
+    #         print(chunk["message"]["content"], end="", flush=True)
+    #         parse_msg.append(chunk["message"]["content"])
+    # separator = '' 
+    # base_msg = separator.join(parse_msg)
+    # msg = base_msg.upper()

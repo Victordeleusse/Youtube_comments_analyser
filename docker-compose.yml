@@ -21,7 +21,18 @@ services:
       - "11434:11434"
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
+  
+  # chroma:
+  #   image: ghcr.io/chroma-core/chroma:latest
+  #   volumes:
+  #     - chroma_index:/chroma/.chroma/index
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - IS_PERSISTENT=TRUE
+  #     - ALLOW_RESET=TRUE
 
 volumes:
   postgres_data:
   ollama:
+  # chroma_index:
