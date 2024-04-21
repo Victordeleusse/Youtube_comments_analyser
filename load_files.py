@@ -18,13 +18,12 @@ embedding_model_name = [os.getenv("BASE_EMBEDDING_MODEL")]
 
 def load_documents_from_Files(path: str):
     """
-    Loads documents from the specified directory path.
-    You will then be able to enter specific contexts you want to ban from your channel
+    Loads documents from the specified directory path, checking if they are already processed.
 
     Args:
         path (str): The path to the directory containing documents to load.
     Returns:
-        List[Document]: A list of loaded documents.
+        dict: Dictionary of documents with their names as keys.
         List[str]: A list with their corresponding names in the folder.
     Raises:
         FileNotFoundError: If the specified path does not exist.
@@ -32,26 +31,27 @@ def load_documents_from_Files(path: str):
     if not os.path.exists(path):
         raise FileNotFoundError(f"The specified path does not exist: {path}")
 
-    loaders = {
-        '.pdf': PyPDFLoader(),
-        '.md': TextLoader(),
-    }
-    
     documents_names = []
     docs = {}
-    for file_ext, loader in loaders.items():
-        file_pattern = os.path.join(path, '**', '*' + file_ext)
-        for file_path in glob.glob(file_pattern, recursive=True):
-            document_name = os.path.basename(file_path)
-            if document_name not in documents_names:
-                documents_names.append(document_name)
-                if not check_doc_in_db(document_name):
-                    with open(file_path, 'rb') as file_content:
-                        if isinstance(loader, PyPDFLoader):
-                            document = loader.load(file_content) 
-                        elif isinstance(loader, TextLoader):
-                            document = loader.load(file_content.read().decode('utf-8'))
-                        docs[document_name] = document
+    for file_path in glob.glob(os.path.join(path, '**', '*'), recursive=True):
+        file_ext = os.path.splitext(file_path)[1].lower()
+        document_name = os.path.basename(file_path)
+        if document_name not in documents_names: 
+            documents_names.append(document_name)
+            # Check if document has already been processed
+            if not check_doc_in_db(document_name):
+                # Initialize the appropriate loader and load the document
+                if file_ext == '.pdf':
+                    from langchain_community.document_loaders import PyPDFLoader
+                    loader = PyPDFLoader(file_path=file_path)  
+                    document = loader.load()
+                elif file_ext == '.md':
+                    from langchain_community.document_loaders import TextLoader
+                    loader = TextLoader(file_path=file_path)
+                    document = loader.load()
+                
+                if document:
+                    docs[document_name] = document
     return docs, documents_names
 
 
