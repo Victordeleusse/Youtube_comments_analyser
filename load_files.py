@@ -12,6 +12,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 
 from database_functions import *
+from run_ollama_analysis import *
+
 
 # embedding_model_name = [os.getenv("BASE_EMBEDDING_MODEL")]
 
@@ -47,15 +49,28 @@ def load_documents_from_Files(path: str):
                     else:
                         loader = TextLoader(file_path=file_path)
 
-                    document = loader.load() 
+                    document = loader.load()
+                    text_content = ""
+                    # print(f"DOCUMENT : {document}")
+                    # print(f"DOCUMENT INFO : {dir(document)}")
                     if isinstance(document, list):
-                        document = ' '.join(document)
+                        for doc in document:
+                            # document = ' '.join(doc.text if isinstance(doc, Document) else doc for doc in document)
+                            print(doc.page_content)
+                            print(type(doc.page_content))
+                            
+                            text_content += doc.page_content
+                    elif hasattr(document, 'page_content'):
+                        text_content.append(document.page_content)
+                    elif isinstance(document, Document):
+                        document.text
                     elif isinstance(document, bytes):
                         document = document.decode('utf-8')
-                    if isinstance(document, str):
-                        docs[document_name] = document
+                    # document_full_text = ' '.join(text_content)
+                    if isinstance(text_content, str):
+                        docs[document_name] = text_content
                     else:
-                        print(f"Loaded document {document_name} is not in string format and is a {type(document).__name__}")
+                        print(f"No text content extracted from {document_name}.")
 
     return docs, documents_names
 
@@ -74,7 +89,9 @@ def load_documents_into_database(
     """
 
     raw_documents_dic, all_documents_names = load_documents_from_Files(documents_path)
+    check_if_model_is_available(embedding_model_name)
     embeddings_model = OllamaEmbeddings(model=embedding_model_name)
+    # print(embeddings_model)
 
     print("Creating embeddings and loading documents into our db")
     for document_name, document in raw_documents_dic.items():
@@ -82,6 +99,7 @@ def load_documents_into_database(
         document_embeddings = []
         print("Creating embeddings")
         for chunk in document_splitted:
+            print(chunk)
             embedding = embeddings_model.embed_text(chunk)
             document_embeddings.append(embedding)
 
