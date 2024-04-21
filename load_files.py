@@ -1,8 +1,8 @@
-# from langchain_community.document_loaders import (
-#     DirectoryLoader,
-#     PyPDFLoader,
-#     TextLoader,
-# )
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    PyPDFLoader,
+    TextLoader,
+)
 import glob
 import os
 from typing import List
@@ -40,23 +40,23 @@ def load_documents_from_Files(path: str):
             documents_names.append(document_name)
             # Check if document has already been processed
             if not check_doc_in_db(document_name):
-                # Initialize the appropriate loader and load the document
-                if file_ext == '.pdf':
-                    from langchain_community.document_loaders import PyPDFLoader
-                    loader = PyPDFLoader(file_path=file_path)  
-                    document = loader.load()
-                elif file_ext == '.txt':
-                    from langchain_community.document_loaders import TextLoader
-                    loader = TextLoader(file_path=file_path)
-                    document = loader.load()
-                    print(type(document).__name__)
-                    if isinstance(document, bytes):
-                        document.decode('utf-8')
-                
-                if document and isinstance(document,str):
-                    docs[document_name] = document
-                else :
-                    print("Loaded document is not str format")
+                document = None
+                if file_ext in ['.pdf', '.txt']:  
+                    if file_ext == '.pdf':
+                        loader = PyPDFLoader(file_path=file_path)
+                    else:
+                        loader = TextLoader(file_path=file_path)
+
+                    document = loader.load() 
+                    if isinstance(document, list):
+                        document = ' '.join(document)
+                    elif isinstance(document, bytes):
+                        document = document.decode('utf-8')
+                    if isinstance(document, str):
+                        docs[document_name] = document
+                    else:
+                        print(f"Loaded document {document_name} is not in string format and is a {type(document).__name__}")
+
     return docs, documents_names
 
 
