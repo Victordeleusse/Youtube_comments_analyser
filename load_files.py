@@ -49,9 +49,14 @@ def load_documents_from_Files(path: str):
                     from langchain_community.document_loaders import TextLoader
                     loader = TextLoader(file_path=file_path)
                     document = loader.load()
+                    print(type(document).__name__)
+                    if isinstance(document, bytes):
+                        document.decode('utf-8')
                 
-                if document:
+                if document and isinstance(document,str):
                     docs[document_name] = document
+                else :
+                    print("Loaded document is not str format")
     return docs, documents_names
 
 

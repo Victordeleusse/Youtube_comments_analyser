@@ -236,14 +236,14 @@ def get_embedded_docs(documents_names: list) -> list:
         with connect_to_db() as conn:
             with conn.cursor() as cur:
                 table_name = "embeddings"
-                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                cur.execute(sql.SQL("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)"), [table_name])
                 table_exists = cur.fetchone()[0]
                 if not table_exists:
                     print("Embeddings table does not exist.")
                     return None
                 embedded_documents = []
                 for document in documents_names:
-                    cur.execute(sql.SQL("FROM {} SELECT embedding WHERE document_name = %s)").format(sql.Identifier(table_name)), [document])
+                    cur.execute(sql.SQL("SELECT embedding FROM {} WHERE document_name = %s").format(sql.Identifier(table_name)), [document])
                     result = cur.fetchone()
                     if result:
                         embedded_documents.append(result[0])
