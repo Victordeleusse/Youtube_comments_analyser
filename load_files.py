@@ -1,8 +1,8 @@
-from langchain_community.document_loaders import (
-    DirectoryLoader,
-    PyPDFLoader,
-    TextLoader,
-)
+# from langchain_community.document_loaders import (
+#     DirectoryLoader,
+#     PyPDFLoader,
+#     TextLoader,
+# )
 import glob
 import os
 from typing import List
@@ -13,7 +13,7 @@ from langchain_community.vectorstores import Chroma
 
 from database_functions import *
 
-embedding_model_name = [os.getenv("BASE_EMBEDDING_MODEL")]
+# embedding_model_name = [os.getenv("BASE_EMBEDDING_MODEL")]
 
 
 def load_documents_from_Files(path: str):
@@ -45,7 +45,7 @@ def load_documents_from_Files(path: str):
                     from langchain_community.document_loaders import PyPDFLoader
                     loader = PyPDFLoader(file_path=file_path)  
                     document = loader.load()
-                elif file_ext == '.md':
+                elif file_ext == '.txt':
                     from langchain_community.document_loaders import TextLoader
                     loader = TextLoader(file_path=file_path)
                     document = loader.load()
@@ -73,14 +73,16 @@ def load_documents_into_database(
 
     print("Creating embeddings and loading documents into our db")
     for document_name, document in raw_documents_dic.items():
-        document_splitted = TEXT_SPLITTER.split_text(document['content'])  # Ensure document is split correctly
+        document_splitted = TEXT_SPLITTER.split_text(document) 
         document_embeddings = []
+        print("Creating embeddings")
         for chunk in document_splitted:
             embedding = embeddings_model.embed_text(chunk)
             document_embeddings.append(embedding)
 
         # Combine embeddings (e.g., by averaging)
         combined_embedding = np.mean(document_embeddings, axis=0)
+        print("Loading")
         insert_embedded_documents_in_db(document_name, combined_embedding.tolist())
 
     
@@ -91,3 +93,6 @@ def load_documents_into_database(
         OllamaEmbeddings(model=embedding_model_name),
     )
     return db
+
+if __name__ == "__main__":
+    load_documents_into_database('nomic-embed-text', './Files')

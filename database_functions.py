@@ -189,12 +189,15 @@ def check_doc_in_db(document_name):
             with conn.cursor() as cur:
                 # Check if table exists
                 table_name = "embeddings"
-                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                cur.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"), [table_name])
                 table_exists = cur.fetchone()[0]
                 if not table_exists:
+                    cur.execute(sql.SQL("CREATE TABLE {} (document_id INT PRIMARY KEY, document_name TEXT NOT NULL, embedding FLOAT8[])").format(sql.Identifier(table_name)))
+                    print(f"Table {table_name} created.")
                     return False
-                cur.execute(sql.SQL("SELECT EXISTS (SELECT 1 FROM {} WHERE document_name = %s)").format(sql.Identifier(table_name)), [document_name])
-                return cur.fetchone()[0]
+                else:
+                    cur.execute(sql.SQL("SELECT EXISTS (SELECT 1 FROM {} WHERE document_name = %s)").format(sql.Identifier(table_name)), [document_name])
+                    return cur.fetchone()[0]
     except Exception as e:
         print(f"An error occurred when trying to access document name into the db: {e}")
     
@@ -213,14 +216,14 @@ def insert_embedded_documents_in_db(document_name, embedding):
                     embedding = embedding.tolist()
                 # Check if table exists
                 table_name = "embeddings"
-                cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
-                table_exists = cur.fetchone()[0]
-                if not table_exists:
-                    cur.execute(sql.SQL("CREATE TABLE {} (document_id INT PRIMARY KEY, document_name TEXT NOT NULL, embedding FLOAT8[])").format(sql.Identifier(table_name)))
-                    print(f"Table {table_name} created.")
-                    max_index = 0
-                else:
-                    max_index = cur.execute(sql.SQL("SELECT MAX(document_id) FROM {}").format(sql.Identifier(table_name)))     
+                # cur.execute(sql.SQL("SELECT EXIST (SELECT FROM information_schema.tables WHERE table_name = {})").format(sql.Identifier(table_name)))
+                # table_exists = cur.fetchone()[0]
+                # if not table_exists:
+                #     cur.execute(sql.SQL("CREATE TABLE {} (document_id INT PRIMARY KEY, document_name TEXT NOT NULL, embedding FLOAT8[])").format(sql.Identifier(table_name)))
+                #     print(f"Table {table_name} created.")
+                #     max_index = 0
+                # else:
+                max_index = cur.execute(sql.SQL("SELECT MAX(document_id) FROM {}").format(sql.Identifier(table_name)))     
                 cur.execute("INSERT INTO {} (document_id, document_name, embedding) VALUES (%s, %s, %s)", (max_index + 1, document_name, embedding))
                 conn.commit()
                 print("Document and embedding inserted successfully.")
