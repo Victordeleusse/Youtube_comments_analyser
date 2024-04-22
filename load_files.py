@@ -125,4 +125,4 @@ def load_documents_into_database(embedding_model_name: str, documents_path: str)
     # ids=["id1", "id2"]
     # )
     
-    return collection
+    return collection.query(query_embeddings=embedded_vectors)
