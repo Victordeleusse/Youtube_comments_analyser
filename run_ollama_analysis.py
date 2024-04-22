@@ -180,6 +180,7 @@ if __name__ == "__main__":
     # read_table('bad_comments_table')
     # print(f"\n bad_viewers \n")
     # read_table('bad_viewers')
+    print("Launching ... \n ")
     check_if_model_is_available(model_name)
     db = load_documents_into_database(embedding_model_name, './Files')
     score, alert_msg = comment_content('C est nul, il faut arreter les drogues et les steroides les mecs le melange n est pas bon !', model_name, db)

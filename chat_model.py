@@ -3,6 +3,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain.prompts.prompt import PromptTemplate
 from langchain_core.prompts import format_document
 from langchain.chains import RetrievalQA
+from langchain_community.llms import Ollama
+# import ollama
+
 
 answer = """
 ### Instruction:
@@ -24,9 +27,11 @@ def getChatChain(llm, db):
     # retriever = db # chromadb collection will act naturally as a retriever !
     
     print("Building chain")
+    model = Ollama(model="llama3")
+
     
     qa_chain = RetrievalQA.from_chain_type(
-    llm,
+    model,
     retriever=retriever,
     chain_type_kwargs={"prompt": ANSWER_PROMPT})
     
