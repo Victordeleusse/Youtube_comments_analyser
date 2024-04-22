@@ -20,8 +20,8 @@ ANSWER_PROMPT = ChatPromptTemplate.from_template(answer)
 
 
 def getChatChain(llm, db):
-    # retriever = db.as_retriever(search_kwargs={"k": 10})
-    retriever = db # chromadb collection will act naturally as a retriever !
+    retriever = db.as_retriever(search_kwargs={"k": 10})
+    # retriever = db # chromadb collection will act naturally as a retriever !
     
     print("Building chain")
     
