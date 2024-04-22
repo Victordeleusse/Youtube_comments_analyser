@@ -16,8 +16,7 @@ from database_functions import *
 from run_ollama_analysis import *
 
 
-# embedding_model_name = [os.getenv("BASE_EMBEDDING_MODEL")]
-
+# embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
 
 def load_documents_from_Files(path: str):
     """
@@ -78,9 +77,7 @@ def load_documents_from_Files(path: str):
 
 TEXT_SPLITTER = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 
-def load_documents_into_database(
-    embedding_model_name: str, documents_path: str
-) -> Chroma:
+def load_documents_into_database(embedding_model_name: str, documents_path: str):
     """
     Loads documents from the specified directory into the Chroma database
     after splitting the text into chunks.
@@ -111,7 +108,6 @@ def load_documents_into_database(
 
     
     embedded_vectors = get_embedded_docs(all_documents_names)
-    print(embedded_vectors)
     
     # db = Chroma.from_documents(
     #     embedded_vectors,
@@ -121,7 +117,7 @@ def load_documents_into_database(
     collection = chroma_client.create_collection(name="my_collection")
         
     collection.add(
-        ids=["1"],
+        ids=all_documents_names,
         embeddings=embedded_vectors,
     )
     # documents=["This is a document", "This is another document"],
@@ -129,7 +125,4 @@ def load_documents_into_database(
     # ids=["id1", "id2"]
     # )
     
-    return collection.query(embedded_vectors)
-
-if __name__ == "__main__":
-    load_documents_into_database('nomic-embed-text', './Files')
+    return collection

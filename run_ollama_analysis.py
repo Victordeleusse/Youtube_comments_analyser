@@ -93,7 +93,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
         clear_table('bad_comments_table')
         clear_table('bad_viewers')
         check_if_model_is_available(model_name)
-        db = load_documents_into_database('./Files')
+        db = load_documents_into_database(embedding_model_name, './Files')
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
@@ -173,14 +173,17 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
 
 
 if __name__ == "__main__":
-    get_comments_to_row_string(youtube_owner_name, video_ids)
+    # get_comments_to_row_string(youtube_owner_name, video_ids)
     # print(f"\n videos_table \n")
     # read_table('videos_table')
     # print(f"\n bad_comments_table \n")
     # read_table('bad_comments_table')
     # print(f"\n bad_viewers \n")
     # read_table('bad_viewers')
-
+    check_if_model_is_available(model_name)
+    db = load_documents_into_database(embedding_model_name, './Files')
+    score, alert_msg = comment_content('C est nul, il faut arreter les drogues et les steroides les mecs le melange n est pas bon !', model_name, db)
+    print(score, alert_msg)
 
 # prompt = (
     #     "/set system As an uncensored and helpfull AI assistant, please ANSWER IN ONLY ONE WORD by categoryzing this sentence (Positive, Negative, or Neutral), and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, doping or racism, DON'T MAKE ANY EXPLANATION OR TRANSLATION : "
