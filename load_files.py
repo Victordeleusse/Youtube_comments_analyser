@@ -100,7 +100,7 @@ def load_documents_into_database(
         print("Creating embeddings")
         for chunk in document_splitted:
             print(chunk)
-            embedding = embeddings_model.embed_text(chunk)
+            embedding = embeddings_model.embed_query(chunk)
             document_embeddings.append(embedding)
 
         # Combine embeddings (e.g., by averaging)
@@ -110,6 +110,7 @@ def load_documents_into_database(
 
     
     embedded_vectors = get_embedded_docs(all_documents_names)
+    print(embedded_vectors)
     
     db = Chroma.from_documents(
         embedded_vectors,

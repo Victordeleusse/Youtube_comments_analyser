@@ -224,7 +224,12 @@ def insert_embedded_documents_in_db(document_name, embedding):
                 #     max_index = 0
                 # else:
                 max_index = cur.execute(sql.SQL("SELECT MAX(document_id) FROM {}").format(sql.Identifier(table_name)))     
-                cur.execute("INSERT INTO {} (document_id, document_name, embedding) VALUES (%s, %s, %s)", (max_index + 1, document_name, embedding))
+                if not max_index:
+                    max_index = 0
+                print(f"Document name : {document_name}")
+                print(f"Data ready to embed : {embedding}")
+                print(type(embedding))
+                cur.execute(sql.SQL("INSERT INTO {} (document_id, document_name, embedding) VALUES (%s, %s, %s)").format(sql.Identifier(table_name)), (max_index + 1, document_name, embedding))
                 conn.commit()
                 print("Document and embedding inserted successfully.")
     except Exception as e:
