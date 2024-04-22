@@ -14,8 +14,10 @@ from load_files import *
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 # video_ids = [os.getenv("VIDEO_ID_1")]
-# model_name = [os.getenv("BASE_LLM_MODEL")]
+# model_name = os.getenv("BASE_LLM_MODEL")
 model_name = 'mistral:latest'
+# embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
+embedding_model_name = 'nomic-embed-text'
 video_ids = ['AnOsAjPZ12g']
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
@@ -91,7 +93,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
         clear_table('bad_comments_table')
         clear_table('bad_viewers')
         check_if_model_is_available(model_name)
-        db = load_documents_from_Files('./Files')
+        db = load_documents_into_database('./Files')
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:

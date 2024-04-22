@@ -20,8 +20,8 @@ ANSWER_PROMPT = ChatPromptTemplate.from_template(answer)
 
 
 def getChatChain(llm, db):
-    retriever = db.as_retriever(search_kwargs={"k": 10})
-    
+    # retriever = db.as_retriever(search_kwargs={"k": 10})
+    retriever = db
     qa_chain = RetrievalQA.from_chain_type(
     llm,
     retriever=retriever,

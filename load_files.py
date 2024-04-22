@@ -5,6 +5,7 @@ from langchain_community.document_loaders import (
 )
 import glob
 import os
+import chromadb
 from typing import List
 from langchain_core.documents import Document
 from langchain_community.embeddings import OllamaEmbeddings
@@ -112,11 +113,23 @@ def load_documents_into_database(
     embedded_vectors = get_embedded_docs(all_documents_names)
     print(embedded_vectors)
     
-    db = Chroma.from_documents(
-        embedded_vectors,
-        OllamaEmbeddings(model=embedding_model_name),
+    # db = Chroma.from_documents(
+    #     embedded_vectors,
+    #     OllamaEmbeddings(model=embedding_model_name),
+    # )
+    chroma_client = chromadb.Client()
+    collection = chroma_client.create_collection(name="my_collection")
+        
+    collection.add(
+        ids=["1"],
+        embeddings=embedded_vectors,
     )
-    return db
+    # documents=["This is a document", "This is another document"],
+    # metadatas=[{"source": "my_source"}, {"source": "my_source"}],
+    # ids=["id1", "id2"]
+    # )
+    
+    return collection.query(embedded_vectors)
 
 if __name__ == "__main__":
     load_documents_into_database('nomic-embed-text', './Files')
