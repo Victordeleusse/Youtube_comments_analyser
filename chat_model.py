@@ -23,10 +23,14 @@ def getChatChain(llm, db):
     # retriever = db.as_retriever(search_kwargs={"k": 10})
     retriever = db # chromadb collection will act naturally as a retriever !
     
+    print("Building chain")
+    
     qa_chain = RetrievalQA.from_chain_type(
     llm,
     retriever=retriever,
     chain_type_kwargs={"prompt": ANSWER_PROMPT})
+    
+    print("Building analyzer")
     
     def analyzer(comment: str):
         inputs = {"comment": comment}

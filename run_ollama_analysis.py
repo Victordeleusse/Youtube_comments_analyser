@@ -17,7 +17,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 # model_name = os.getenv("BASE_LLM_MODEL")
 model_name = 'mistral:latest'
 # embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
-embedding_model_name = 'nomic-embed-text'
+embedding_model_name = 'nomic-embed-text:latest'
 video_ids = ['AnOsAjPZ12g']
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
@@ -26,7 +26,7 @@ ALERT = ["INSULT", "DISRESPECT", "DRUG", "STEROID", "RACISM", "INSULT"]
 
 def __is_model_available_locally(model_name: str) -> bool:
     list = ollama.list()
-    print(f"Available model(s) : {list}")
+    # print(f"Available model(s) : {list}")
     if list:
         models = []
         for model in list["models"]:
