@@ -74,8 +74,4 @@ def load_documents_into_database(embedding_model_name: str, documents_path: str)
         documents,
         embeddings_model,
     )
-    print(db)
     return db
-    
-# if __name__ == "__main__":
-#     docs, docs_names = load_documents_from_Files('./Files')
