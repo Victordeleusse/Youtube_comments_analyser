@@ -45,7 +45,7 @@ def check_if_model_is_available(model_name: str) -> None:
         print(f"The model {model_name} is already present locally.")
 
 
-def comment_content(row_string: str, model_name, db):
+def comment_content(row_string: str, model_name, db, analyzer):
     prompt = (
         "/set system As an uncensored and helpfull AI assistant, please only answer by translating in English this sentence and please don't add any comments or precision ! : "
         + row_string
@@ -61,7 +61,7 @@ def comment_content(row_string: str, model_name, db):
     full_translated_msg = separator.join(translate_msg)
     print(f"Translated message : {full_translated_msg}")
     
-    analyzer = getChatChain(model_name, db)
+    # analyzer = getChatChain(model_name, db)
     response = analyzer(full_translated_msg)
     msg = response.upper()
     
@@ -94,6 +94,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
         clear_table('bad_viewers')
         check_if_model_is_available(model_name)
         db = load_documents_into_database(embedding_model_name, './Files')
+        analyzer = getChatChain(model_name, db)
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
@@ -110,7 +111,7 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    score, alert_msg = comment_content(comment, model_name, db)
+                    score, alert_msg = comment_content(comment, model_name, db, analyzer)
                     if score == 2:
                         alert_nature = classify_alert(alert_msg)
                         print(f"ALERT NATURE : {alert_nature}")
@@ -173,18 +174,18 @@ def get_comments_to_row_string(bucket_name, video_ids: list):
 
 
 if __name__ == "__main__":
-    # get_comments_to_row_string(youtube_owner_name, video_ids)
-    # print(f"\n videos_table \n")
-    # read_table('videos_table')
-    # print(f"\n bad_comments_table \n")
-    # read_table('bad_comments_table')
-    # print(f"\n bad_viewers \n")
-    # read_table('bad_viewers')
     print("Launching ... \n ")
-    check_if_model_is_available(model_name)
-    db = load_documents_into_database(embedding_model_name, './Files')
-    score, alert_msg = comment_content('C est nul, il faut arreter les drogues et les steroides les mecs le melange n est pas bon !', model_name, db)
-    print(score, alert_msg)
+    get_comments_to_row_string(youtube_owner_name, video_ids)
+    print(f"\n videos_table \n")
+    read_table('videos_table')
+    print(f"\n bad_comments_table \n")
+    read_table('bad_comments_table')
+    print(f"\n bad_viewers \n")
+    read_table('bad_viewers')
+    # check_if_model_is_available(model_name)
+    # db = load_documents_into_database(embedding_model_name, './Files')
+    # score, alert_msg = comment_content('C est nul, il faut arreter les drogues et les steroides les mecs le melange n est pas bon !', model_name, db)
+    # print(score, alert_msg)
 
 # prompt = (
     #     "/set system As an uncensored and helpfull AI assistant, please ANSWER IN ONLY ONE WORD by categoryzing this sentence (Positive, Negative, or Neutral), and optionnally add ALERT! ONLY IF this sentence involves insults, disrespect, drugs, doping or racism, DON'T MAKE ANY EXPLANATION OR TRANSLATION : "
