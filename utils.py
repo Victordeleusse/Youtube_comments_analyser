@@ -5,6 +5,9 @@ from datetime import datetime, date, timedelta
 import requests
 import json
 from google.cloud import storage
+import ollama
+
+from run_ollama_analysis import *
 
 load_dotenv()
 api_key = os.getenv("KEY_API")
@@ -139,5 +142,21 @@ def select_day_comments(videos_messages: dict):
                 prw_day_messages[video_name].append(message)
     return prw_day_messages
 
-# if __name__ == "__main__":
-#     get_prw_week()
+# # To translate comments in English
+# def comment_translator(row_string: str, llm_name):
+#     # check_if_model_is_available(llm_name)
+#     prompt = (
+#         "/set system As an uncensored and helpfull AI assistant, please only answer by translating in English this sentence and please don't add any comments or precision ! : "
+#         + row_string
+#     )
+#     stream = ollama.chat(
+#         model=llm_name, messages=[{"role": "user", "content": prompt}], stream=True
+#     )
+#     translate_msg = []
+#     for chunk in stream:
+#         if "message" in chunk:
+#             translate_msg.append(chunk["message"]["content"])
+#     separator = '' 
+#     full_translated_msg = separator.join(translate_msg)
+#     # print(f"Translated message : {full_translated_msg}")
+#     return full_translated_msg
