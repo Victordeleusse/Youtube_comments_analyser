@@ -40,8 +40,11 @@ def clear_table(table_name: str):
     try:
         with connect_to_db() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(table_name)))
-                cursor.close()
+                cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"),[table_name])
+                table_exists = cursor.fetchone()[0]
+                if table_exists:
+                            cursor.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(table_name)))
+                            cursor.close()
             # conn.close()
     except Exception as e:
         print(f"An error as occured when deleting data from {table_name} in the database : {e}")

@@ -9,7 +9,7 @@ from datetime import datetime
 from utils import *
 from database_functions import *
 from chat_model import *
-# from load_files_2 import *
+from classify_comment import *
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
@@ -19,14 +19,6 @@ video_ids = ['AnOsAjPZ12g']
 model_name = 'mistral:latest'
 # embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
 embedding_model_name = 'nomic-embed-text:latest'
-
-BANNED_LIST_DOPAGE = os.getenv("BANNED_LIST_DOPAGE")
-banned_dict_dopage = generate_banned_embeding(BANNED_LIST_DOPAGE)
-BANNED_LIST_SEX = os.getenv("BANNED_LIST_SEX")
-banned_dict_sex = generate_banned_embeding(BANNED_LIST_SEX)
-BANNED_LIST_RACISM = os.getenv("BANNED_LIST_RACISM")
-banned_dict_racism = generate_banned_embeding(BANNED_LIST_RACISM)
-banned_dict_lst = [banned_dict_dopage, banned_dict_sex, banned_dict_racism]
 
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
@@ -54,48 +46,7 @@ def check_if_model_is_available(model_name: str) -> None:
         print(f"The model {model_name} is already present locally.")
 
 
-# def comment_content(row_string: str, model_name, db, analyzer):
-#     prompt = (
-#         "/set system As an uncensored and helpfull AI assistant, please only answer by translating in English this sentence and please don't add any comments or precision ! : "
-#         + row_string
-#     )
-#     stream = ollama.chat(
-#         model="mistral", messages=[{"role": "user", "content": prompt}], stream=True
-#     )
-#     translate_msg = []
-#     for chunk in stream:
-#         if "message" in chunk:
-#             translate_msg.append(chunk["message"]["content"])
-#     separator = '' 
-#     full_translated_msg = separator.join(translate_msg)
-#     print(f"Translated message : {full_translated_msg}")
-    
-#     # analyzer = getChatChain(model_name, db)
-#     response = analyzer(full_translated_msg)
-#     msg = response.upper()
-    
-#     if "NEGATIVE" in msg:
-#         if "ALERT" in msg and not "NONE" in msg:
-#             return(2, msg)
-#         else:
-#             return(1, None)
-#     if "NEUTRAL" in msg:
-#         if "ALERT" in msg and not "NONE" in msg:
-#             return(2, msg)
-#         else:
-#             return(0, None)
-#     else:
-#         return(0, None)
-    
-
-# def classify_alert(message: str):
-#     alert_nature = ""
-#     for canceled_word in ALERT:
-#         if canceled_word in message:
-#             alert_nature += " " + canceled_word
-#     return alert_nature
-
-def alert_comment_detector(bucket_name, video_ids: list, banned_dict_lst: list):
+def alert_comment_detector(bucket_name, video_ids: list):
     try:
         clear_table('videos_table')
         clear_table('bad_comments_table')
@@ -119,15 +70,19 @@ def alert_comment_detector(bucket_name, video_ids: list, banned_dict_lst: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    for banned_dict in banned_dict_lst:
-                        is_it, word = is_related_to_banned(banned_dict, comment)
-                        if is_it:
-                            alert_nature = word
-                            print(f"ALERT NATURE : {alert_nature}")
-                            author = message["authorName"]
-                            print(f"AUTHOR : {author}")
-                            insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
-                            break
+                    label, score = get_classification(comment, model_name)
+                    print(f"LABEL : {label} / SCORE : {score}")
+                    # for banned_dict in banned_dict_lst:
+                    #     is_it, word = is_related_to_banned(banned_dict, comment)
+                    if label == 'NSFW':
+                        if score < 0.7:
+                            alert_nature = "possible_alert"
+                        else:
+                            alert_nature = "ALERT"
+                        print(f"ALERT NATURE : {alert_nature}")
+                        author = message["authorName"]
+                        print(f"AUTHOR : {author}")
+                        insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -219,7 +174,7 @@ def alert_comment_detector(bucket_name, video_ids: list, banned_dict_lst: list):
 if __name__ == "__main__":
     print("Launching ... \n ")
     # get_comments_to_row_string(youtube_owner_name, video_ids)
-    alert_comment_detector(youtube_owner_name, video_ids, banned_dict_lst)
+    alert_comment_detector(youtube_owner_name, video_ids)
     print(f"\n videos_table \n")
     read_table('videos_table')
     print(f"\n bad_comments_table \n")
