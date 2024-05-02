@@ -38,34 +38,29 @@ token_hf = os.getenv("HF_API_TOKEN")
 
 # Load model directly
 from transformers import pipeline
-
-# from optimum.pipelines import pipeline
-# classifier = pipeline(task="zero-shot-classification", model="facebook/bart-large-mnli", accelerator="ort")
-
-from transformers import pipeline
 # classifier_label = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
 classifier_label = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 classifier_offense = pipeline("text-classification", model="KoalaAI/OffensiveSpeechDetector")
 
 
-def get_label_classification(comment: str, llm_name):
-    # translated_comment = comment_translator(comment, llm_name)
-    res = classifier_label(comment, CANDIDATE_LABELS, multi_label=False)
+def get_label_classification(comment: str):
+    # translated_comment = comment_translator(comment)
+    res = classifier_label(comment, CANDIDATE_LABELS, multi_label=True)
     return(res['labels'][0], res['scores'][0])
-    # return res
-def get_offense_classification(comment: str, llm_name):
-    # translated_comment = comment_translator(comment, llm_name)
+    
+def get_offense_classification(comment: str):
+    # translated_comment = comment_translator(comment)
     result = classifier_offense(comment)
-    return(result)
+    return(result[0]['labels'])
 
-if __name__ == "__main__":
-    comment = "I love you."
-    # res_label, res_score = get_label_classification(comment, model_name)
-    # print(f"{res_label}: {res_score}")
-    res_label = get_label_classification(comment, model_name)
-    print(res_label)
-    results = get_offense_classification(comment, model_name)
-    print(results)
+# if __name__ == "__main__":
+#     comment = "I love you."
+#     # res_label, res_score = get_label_classification(comment, model_name)
+#     # print(f"{res_label}: {res_score}")
+#     res_label = get_label_classification(comment, model_name)
+#     print(res_label)
+#     results = get_offense_classification(comment, model_name)
+#     print(results)
     
     
 

@@ -70,13 +70,21 @@ def alert_comment_detector(bucket_name, video_ids: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    label_score = get_classification(comment, model_name)
+                    translated_comment = comment_translator(comment, model_name)
+                    label, score = get_label_classification(translated_comment)
+                    # offensive = get_offense_classification(translated_comment)
                     print(f"LABEL : {label} / SCORE : {score}")
-                    # for banned_dict in banned_dict_lst:
-                    #     is_it, word = is_related_to_banned(banned_dict, comment)
-                    if score > 0.3:
+                    if label != 'life':
                         print(f"ALERT NATURE : {label}")
                         alert_nature = label
+                        author = message["authorName"]
+                        print(f"AUTHOR : {author}")
+                        insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                        pass
+                    offensive = get_offense_classification(translated_comment)
+                    if offensive == 'offensive':
+                        print(f"ALERT NATURE : {offensive}")
+                        alert_nature = offensive
                         author = message["authorName"]
                         print(f"AUTHOR : {author}")
                         insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
