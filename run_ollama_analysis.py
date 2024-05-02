@@ -70,16 +70,13 @@ def alert_comment_detector(bucket_name, video_ids: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    label, score = get_classification(comment, model_name)
+                    label_score = get_classification(comment, model_name)
                     print(f"LABEL : {label} / SCORE : {score}")
                     # for banned_dict in banned_dict_lst:
                     #     is_it, word = is_related_to_banned(banned_dict, comment)
-                    if label == 'NSFW':
-                        if score < 0.7:
-                            alert_nature = "possible_alert"
-                        else:
-                            alert_nature = "ALERT"
-                        print(f"ALERT NATURE : {alert_nature}")
+                    if score > 0.3:
+                        print(f"ALERT NATURE : {label}")
+                        alert_nature = label
                         author = message["authorName"]
                         print(f"AUTHOR : {author}")
                         insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
