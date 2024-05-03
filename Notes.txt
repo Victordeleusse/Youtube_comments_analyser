@@ -25,6 +25,7 @@ CORONAGYM
     - https://www.youtube.com/watch?v=-eAazWm0uGI 
 TRAINING_THERAPY
     - https://www.youtube.com/watch?v=AnOsAjPZ12g
+    - https://www.youtube.com/watch?v=i41X5MESrZw
 
 EXECUTION DU main.py -> Creation du blob(s) pour stocker la data des videos 
 
