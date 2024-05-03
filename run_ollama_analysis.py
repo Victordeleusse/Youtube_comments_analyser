@@ -22,9 +22,6 @@ embedding_model_name = 'nomic-embed-text:latest'
 
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
-ALERT = ["INSULT", "DISRESPECT", "DRUG", "STEROID", "RACISM", "INSULT"]
-
-
 def __is_model_available_locally(model_name: str) -> bool:
     list = ollama.list()
     # print(f"Available model(s) : {list}")
@@ -70,24 +67,29 @@ def alert_comment_detector(bucket_name, video_ids: list):
                 for message in existing_data_json:
                     comment = message["text"]
                     print("\n\nAnalyzing comment: ", comment)
-                    translated_comment = comment_translator(comment, model_name)
-                    label, score = get_label_classification(translated_comment)
-                    # offensive = get_offense_classification(translated_comment)
-                    print(f"LABEL : {label} / SCORE : {score}")
-                    if label != 'life':
-                        print(f"ALERT NATURE : {label}")
-                        alert_nature = label
-                        author = message["authorName"]
-                        print(f"AUTHOR : {author}")
-                        insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
-                        pass
-                    offensive = get_offense_classification(translated_comment)
-                    if offensive == 'offensive':
-                        print(f"ALERT NATURE : {offensive}")
-                        alert_nature = offensive
-                        author = message["authorName"]
-                        print(f"AUTHOR : {author}")
-                        insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                    splited_translated_comment = comment_translator(comment, model_name)
+                    for translated_comment in splited_translated_comment:
+                        res_label = get_label_classification(translated_comment)
+                        label = res_label[0]
+                        score = res_label[1]
+                        print(f"LABEL : {label} / SCORE : {score}")
+                        if score > 0.5:
+                            print(f"ALERT NATURE : {label}")
+                            alert_nature = label
+                            author = message["authorName"]
+                            print(f"AUTHOR : {author}")
+                            insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                            break
+                        else:
+                            offensive = get_offense_classification(translated_comment)
+                            print(f"ALERT NATURE : {offensive}")
+                            if offensive == 'offensive':
+                                print(f"ALERT NATURE : {offensive}")
+                                alert_nature = offensive
+                                author = message["authorName"]
+                                print(f"AUTHOR : {author}")
+                                insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
+                                break
     except Exception as e:
         print(f"An error occurred: {e}")
 

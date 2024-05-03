@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 # import ollama
+import re
 from scipy.spatial.distance import cosine
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
@@ -13,7 +14,7 @@ model_name = 'mistral:latest'
 embedding_model_name = 'nomic-embed-text:latest'
 
 # CANDIDATE_LABELS = os.getenv("CRITICAL_THEMES")
-CANDIDATE_LABELS = ["life", "sex", "drug", "racism", "violence", "crime"]
+CANDIDATE_LABELS = ["sex", "drug", "racism", "doped", "crime"]
 
 # To translate comments in English
 def comment_translator(row_string: str, llm_name):
@@ -31,8 +32,17 @@ def comment_translator(row_string: str, llm_name):
             translate_msg.append(chunk["message"]["content"])
     separator = '' 
     full_translated_msg = separator.join(translate_msg)
-    print(f"Translated message : {full_translated_msg}")
-    return full_translated_msg.lower()
+    full_translated_msg = full_translated_msg.lower()
+    # print(f"Translated message : {full_translated_msg}")
+    splited_translated_message = re.split('[.,;:]', full_translated_msg)
+    while True:
+        to_delete = ''
+        if to_delete in splited_translated_message:
+            splited_translated_message.remove(to_delete)
+        else:
+            break
+    print(f"Splitted translated message : {splited_translated_message}")
+    return splited_translated_message
 
 token_hf = os.getenv("HF_API_TOKEN")
 
@@ -47,48 +57,20 @@ def get_label_classification(comment: str):
     # translated_comment = comment_translator(comment)
     res = classifier_label(comment, CANDIDATE_LABELS, multi_label=True)
     return(res['labels'][0], res['scores'][0])
-    
+    # return res
+
 def get_offense_classification(comment: str):
     # translated_comment = comment_translator(comment)
     result = classifier_offense(comment)
-    return(result[0]['labels'])
+    return(result[0]['label'])
 
 # if __name__ == "__main__":
-#     comment = "I love you."
+#     comment = "J'aime beaucoup son physique et sa force de travail est vraiment impressionnante mais il ne fera jamais carriere dans ce monde la : il utilise des produits dopants depuis trop longtemps."
+#     liste = comment_translator(comment, model_name)
+#     for com in liste:
 #     # res_label, res_score = get_label_classification(comment, model_name)
 #     # print(f"{res_label}: {res_score}")
-#     res_label = get_label_classification(comment, model_name)
-#     print(res_label)
-#     results = get_offense_classification(comment, model_name)
-#     print(results)
-    
-    
-
-# import requests
-
-# API_URL = "https://api-inference.huggingface.co/models/sileod/deberta-v3-base-tasksource-nli"
-# headers = {"Authorization": "Bearer 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"}
-
-# def query(payload):
-# 	response = requests.post(API_URL, headers=headers, json=payload)
-# 	return response.json()
-
-# def get_classification(comment: str, llm_name):
-#     output = query({
-#         "inputs": comment,
-#         "parameters": {"candidate_labels": CANDIDATE_LABELS},
-#     })
-#     print(output)
-    
-
-
-
-#     # Remplacer 'your_model_name_here' par le chemin/nom de votre modèle sur Hugging Face
-#     url = "https://huggingface.co/api/models/layier/unbiaised-toxic-roberta-onnx"
-#     response = requests.get(url)
-#     data = response.json()
-
-#     # Afficher les fichiers disponibles
-#     print(data.get('siblings', []))  # 'siblings' contient les fichiers liés au modèle
-
-#     # get_classification("black men love pills.", model_name)
+#         res_label = get_label_classification(com)
+#         print(res_label)
+#         results = get_offense_classification(com)
+#         print(results)
