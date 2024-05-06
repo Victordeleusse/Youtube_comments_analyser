@@ -15,16 +15,20 @@ An account linked to each "bad" user is then incremented to identify the recurre
 
 ### 1. GCP x Terraform
 
-Setting up environment variables in the .env file: 
+Setting up environment variables in the **.env** file: 
 	- Google Project + GCP config
 	- Model config (If you decide to use Ollama translation model) 
 
 TERRAFORM setup
-Loading variables into your current environment: source .env
-Then run :
+Loading variables into your current environment: 
+```
+source .env
+``` Then run :
+```
 	terraform init
 	terraform plan
 	terraform apply (-auto-approve)
+```
 		-> A BUCKET is created, for the target channel = bucket_name
 
 ### 2. Docker x Airflow
