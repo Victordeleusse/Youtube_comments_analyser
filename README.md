@@ -1,4 +1,4 @@
-# YouTube video(s) general opinion and specific behaviour 
+# YouTube video(s) specific behaviour 
 This project was implemented with the aim of training myself in Data/Big Data and Data Engineering. It followed a request from a YouTuber friend of mine who wanted to receive daily alerts if one or several specific topics were mentioned in any of the comments on its videos, or if a user typed offensive behavior comment.
 
 This project allows the YouTuber to store in a SQL database:
@@ -12,6 +12,8 @@ and this for as many videos as desired.
 An account linked to each "bad" user is then incremented to identify the recurrence of certain "harmful" or aggressive viewers.
 
 ## Implementation
+
+In a virtual environment, please install requirements.
 
 ### 1. GCP x Terraform
 
@@ -48,8 +50,6 @@ Then, launching Docker service with an Ollama service and a PostgreSQL instance
 docker-compose up -d
 ```
 
-- Install Apache Airflow in a new virtual environment:
-(Don't forget to include the various environment variables necessary for the project to function properly: GCP-key.json...)
 *Airflow requires a database to store its state and configurations. For a simple local installation, you can use SQLite -> many issues arose, particularly regarding simultaneous execution when triggering events, changing the database with the implementation of an SQL client.*
 
 - Create an admin for the service :
