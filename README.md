@@ -21,15 +21,20 @@ Setting up environment variables in the **.env** file:
 
 TERRAFORM setup
 Loading variables into your current environment: 
+
 ```
 source .env
-``` Then run :
+``` 
+
+Then run:
+
 ```
 	terraform init
 	terraform plan
 	terraform apply (-auto-approve)
 ```
-		-> A BUCKET is created, for the target channel = bucket_name
+
+-> A BUCKET is created, for the target channel = bucket_name
 
 ### 2. Docker x Airflow
 
