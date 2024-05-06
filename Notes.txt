@@ -29,6 +29,8 @@ TRAINING_THERAPY
 
 EXECUTION DU main.py -> Creation du blob(s) pour stocker la data des videos 
 
+LANCEMENT DES DOCKERS : "docker-compose up -d" -> lancement d une instance POSTGRESQL 
+
 3. Installez Apache Airflow dans un nouvel environnement virtuel :
 (Ne pas oublier d'y joindre les differentes variables d'env necessaires au bon fonctionnement du projet : GCP-key.json ...)
 Airflow nécessite une base de données pour stocker son état et ses configurations. Pour une installation locale simple, vous pouvez utiliser SQLite -> de nombreux problemes sont apparus, notamment sur l execution simultanee lors du trigger d event, changement de database avec mise en place d un client SQL.
@@ -45,8 +47,6 @@ Airflow nécessite une base de données pour stocker son état et ses configurat
 Password: 1234
 
 4. LANCEMENT DU SERVICE 
-
--   "docker-compose up -d" -> lancement d une instance POSTGRESQL 
 
 - airflow db init
 

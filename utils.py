@@ -7,6 +7,7 @@ import json
 from google.cloud import storage
 
 from run_ollama_analysis import *
+from database_functions import clear_table
 
 load_dotenv()
 api_key = os.getenv("KEY_API")
@@ -133,11 +134,21 @@ def select_week_comments(videos_messages: dict):
 
 # To select comments from the past day only 
 def select_day_comments(videos_messages: dict):
-    day_list = get_prw_day()
+    # day_list = get_prw_day()
     prw_day_messages = {}
+    today = date.today()
+    today = today.strftime("%Y-%m-%d")
     for video_name, messages in videos_messages.items():
         prw_day_messages[video_name] = []
         for message in messages:
-            if message.publishedAt in day_list:
+            if message.publishedAt == today:
+                print(f"Daily message : {message.text}")
                 prw_day_messages[video_name].append(message)
     return prw_day_messages
+
+
+# if __name__ == "__main__":
+#     clear_table('videos_table')
+#     clear_table('bad_comments_table')
+#     clear_table('bad_viewers')
+    

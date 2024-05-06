@@ -10,8 +10,11 @@ from utils import *
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("KEY_GCP_PATH")
 api_key = os.getenv("KEY_API")
+video_ids = [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")]
+
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
+# Need to first upload data and then extend it as it s not possible to drop directly add data in a blob
 def append_to_blob(youtube_owner_name, new_data: dict):
     storage_client = storage.Client()
     bucket = storage_client.bucket(youtube_owner_name)
@@ -29,8 +32,9 @@ def append_to_blob(youtube_owner_name, new_data: dict):
 def update_comments(bucket_name, video_ids: list, api_key: str):
     try:
         videos_messages = load_comments(bucket_name, video_ids, api_key)
-        lw_messages = select_day_comments(videos_messages)
-        append_to_blob(youtube_owner_name, lw_messages)
+        lw_messages = select_day_comments(videos_messages) # selecting only message from previous day
+        # print(lw_messages)
+        append_to_blob(youtube_owner_name, lw_messages) # adding these messages to the blob
     except Exception as e:
         print(f"An error occurred! {e}")
     pass
@@ -67,21 +71,12 @@ t1 = PythonOperator(
     dag=dag,
 )
 
-# t2 = PythonOperator(
-#     task_id="analyze_sentiment",
-#     python_callable=analyze_overall_sentiment,
-#     op_kwargs={"bucket_name": youtube_owner_name},
-#     provide_context=True,
-#     dag=dag,
-# )
-
-# t1 >> t2
-
-# if __name__ == "__main__":
-#     videos_list = [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")]
-#     key = os.getenv("KEY_API")
-#     last_day_messages = update_comments(videos_list, api_key)
-#     for name, messages_lst in last_day_messages.items():
-#         for message in messages_lst:
-#             print(message.authorName)
-#             print(message.publishedAt)
+if __name__ == "__main__":
+    update_comments(youtube_owner_name, video_ids, api_key)
+    # videos_list = [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")]
+    # key = os.getenv("KEY_API")
+    # last_day_messages = update_comments(video_ids, api_key)
+    # for name, messages_lst in last_day_messages.items():
+    #     for message in messages_lst:
+    #         print(message.authorName)
+    #         print(message.publishedAt)
