@@ -3,13 +3,13 @@ This project was implemented with the aim of training myself in Data/Big Data an
 
 This project allows the YouTuber to store in a SQL database:
 
-- comments detected by the models as offensive or addressing a specific topic previously defined by the Youtuber;
-- the authors of these comments 
-- these comments and why they have been detected;
-- the date of these publications;
+- comments detected by the models and reason why (offensive or addressing a specific topic previously defined by the Youtuber);
+- authors of these comments;
+- the date of these comments.
 
-and this for as many videos as desired. 
-An account linked to each "bad" user is then incremented to identify the recurrence of certain "harmful" or aggressive viewers.
+This for as many videos as desired.
+
+An account linked to each viewer is then incremented to identify the recurrence of certain behaviour of viewers, and a global report is generated on daily (but it also can be changed) basis to get a global overview of these behaviours on youtube videos comments section.
 
 ## Implementation
 
@@ -79,7 +79,9 @@ https://huggingface.co/sileod/deberta-v3-large-tasksource-nli?candidate_labels=s
 - Behaviour :
 https://huggingface.co/KoalaAI/OffensiveSpeechDetector?text=In+my+opinion%2C+he+is+no+longer+the+best+French+bodybuilder.+He+has+been+surpassed+by+St%C3%A9phane+Matela.+Despite+this+not+being+the+same+category.
 
+Initially, i wanted to use prompt engineering and 
+
 
 ### 3. SQL query and result
 
-After analyzing and classifying comments from different videos, a grouping occurs on tables *bad_comments_table* and *bad_viewers*, and the analysis results are then extracted in PDF format to the path specified in the .env file
+After analyzing and classifying comments from different videos, a grouping occurs on tables *bad_comments_table* and *bad_viewers*, and the analysis results are then extracted in PDF format to the path specified in the .env file : **EXTRACT_RESULT_PATH**
