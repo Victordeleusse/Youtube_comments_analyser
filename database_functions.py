@@ -2,6 +2,10 @@ import psycopg2
 from psycopg2 import sql
 from dotenv import load_dotenv
 import os
+import pandas as pd
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import letter
 # import numpy as np
 
 load_dotenv()
@@ -193,12 +197,57 @@ def extract_for_result():
         with connect_to_db() as conn:
             with conn.cursor() as cursor:
                 table_name_b = "bad_comments_table"
-                cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.table WHERE table_name = %s)"), [table_name_bv])
-                table_exists = cursor.fetchone[0]
+                cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"), [table_name_b])
+                table_exists = cursor.fetchone()[0]
                 if not table_exists:
                     print(f"Table {table_name_b} doesn't exist : No bad viewrs.")
                     return
-                table_name_bv = "bad_viewers"
-                cursor.execute(sql.SQL("SELECT b.authorName, b.authorID, bv.count, array.agg(b.video_title) AS video_titles, array.agg(b.alertNature) AS alertNatures, arr.aggregate(b.text) AS texts, arr.aggregate(b.publishedAt) AS publishedAts FROM {} b INNER JOIN {} bv ON b.authorName = bv.authorName AND b.authorID = bv.authorID GROUP BY b.authorname, b.authorID, bv.cout").format(sql.Identifier(table_name_b, table_name_bv)))
+                query = sql.SQL("""
+                    SELECT
+                        b.authorname,
+                        b.authorID,
+                        bv.count,
+                        array_agg(b.video_title) AS video_titles,
+                        array_agg(b.alertNature) AS alertNatures,
+                        array_agg(b.text) AS texts,
+                        array_agg(b.publishedAt) AS publishedAts
+                    FROM
+                        {table_b} b
+                    INNER JOIN
+                        {table_bv} bv
+                    ON
+                        b.authorName = bv.authorName AND b.authorID = bv.authorID
+                    GROUP BY
+                        b.authorname, b.authorID, bv.count
+                                """).format(table_b=sql.Identifier('bad_comments_table'), table_bv=sql.Identifier('bad_viewers'))
+                cursor.execute(query=query)
+                return cursor.fetchall()
     except Exception as e:
         print(f"An error occurred when trying to extract results from db: {e}")
+        
+def get_result_in_pdf():
+    pdf = SimpleDocTemplate('result.pdf', pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
+    styleN = styles['Normal']
+    
+    data = extract_for_result()
+    columns = ['Author name', 'Author ID', 'Count of bad comments', 'Video(s)', 'Alert nature', 'Comment(s)', 'Published at']
+    dataframe = pd.DataFrame(data=data, columns=columns)
+    
+    data = [[Paragraph(str(item), styleN) if isinstance(item, str) else item for item in row] for row in dataframe.values]
+    data.insert(0, [Paragraph(str(col), styles['Heading4']) for col in dataframe.columns])  # Entêtes de colonnes
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), '#d3d3d3'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 1, 'black'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+    ]))
+    elements.append(table)
+    pdf.build(elements)
+    
+if __name__ == "__main__":
+    get_result_in_pdf()
