@@ -103,34 +103,34 @@ def first_upload_to_gcs(bucket_name, video_ids: list, api_key: str):
             blob.upload_from_string(data_string, content_type='application/json')
             print(f"Data uploaded to {destination_blob_name}.")
     
-def get_prw_week():
-    today = date.today()
-    day_list = []
-    for i in range(0, 9):
-        day = today - timedelta(days=i)
-        day_list.append(day.strftime("%Y-%m-%d"))
-    print(f"DAY PRW WEEK : {day_list}")
-    return day_list
+# def get_prw_week():
+#     today = date.today()
+#     day_list = []
+#     for i in range(0, 9):
+#         day = today - timedelta(days=i)
+#         day_list.append(day.strftime("%Y-%m-%d"))
+#     print(f"DAY PRW WEEK : {day_list}")
+#     return day_list
 
-def get_prw_day():
-    today = date.today()
-    day_list = []
-    for i in range(0, 1):
-        day = today - timedelta(days=i)
-        day_list.append(day.strftime("%Y-%m-%d"))
-    # print(f"DAY LIST : {day_list}")
-    return day_list
+# def get_prw_day():
+#     today = date.today()
+#     day_list = []
+#     for i in range(0, 1):
+#         day = today - timedelta(days=i)
+#         day_list.append(day.strftime("%Y-%m-%d"))
+#     # print(f"DAY LIST : {day_list}")
+#     return day_list
 
-# To select comments from the past week only 
-def select_week_comments(videos_messages: dict):
-    day_list = get_prw_week()
-    prw_week_messages = {}
-    for video_name, messages in videos_messages.items():
-        prw_week_messages[video_name] = []
-        for message in messages:
-            if message.publishedAt in day_list:
-                prw_week_messages[video_name].append(message)
-    return prw_week_messages
+# # To select comments from the past week only 
+# def select_week_comments(videos_messages: dict):
+#     day_list = get_prw_week()
+#     prw_week_messages = {}
+#     for video_name, messages in videos_messages.items():
+#         prw_week_messages[video_name] = []
+#         for message in messages:
+#             if message.publishedAt in day_list:
+#                 prw_week_messages[video_name].append(message)
+#     return prw_week_messages
 
 # To select comments from the past day only 
 def select_day_comments(videos_messages: dict):

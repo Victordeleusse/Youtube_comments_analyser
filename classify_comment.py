@@ -10,9 +10,8 @@ from run_ollama_analysis import *
 
 model_name = os.getenv("BASE_LLM_MODEL")
 embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
-
+token_hf = os.getenv("HF_API_TOKEN")
 CANDIDATE_LABELS = os.getenv("CRITICAL_THEMES")
-# CANDIDATE_LABELS = ["sex", "drug", "racism", "doped", "crime"]
 
 
 # To remove emoji from the comment which can lead to strange labelisation
@@ -28,7 +27,7 @@ def remove_emoji(comment: str):
     return emoji_pattern.sub(r'', comment)
 
 
-# To translate comments in English
+# # To translate comments in English using Ollama and Lanchain (prompt engineering)
 # def comment_translator(row_string: str, llm_name):
 #     # check_if_model_is_available(llm_name)
 #     prompt = (
@@ -59,7 +58,7 @@ def remove_emoji(comment: str):
 #     print(f"Splitted translated message : {splited_translated_message}")
 #     return splited_translated_message
 
-token_hf = os.getenv("HF_API_TOKEN")
+
 
 # Load model directly
 from transformers import pipeline
