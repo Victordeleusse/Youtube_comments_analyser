@@ -85,3 +85,7 @@ Initially, I wanted to use prompt engineering methods with LangChain by calling 
 ### 3. SQL query and result
 
 After analyzing and classifying comments from different videos, a grouping occurs on tables *bad_comments_table* and *bad_viewers*, and the analysis results are then extracted in PDF format to the path specified in the .env file : **EXTRACT_RESULT_PATH**
+
+![Headers and first results](YT_analysis_1.png)
+
+![Example of a multiple targeted behaviour detected on different videos](YT_analysis_2.png)
