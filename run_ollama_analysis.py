@@ -88,9 +88,13 @@ def alert_comment_detector(bucket_name, video_ids: list):
                                 insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
                                 break
             else:
-                print(f"Blob {destination_blob_name} not found")               
+                print(f"Blob {destination_blob_name} not found")
+        
+        get_result_in_pdf()             
+    
     except Exception as e:
         print(f"An error occurred: {e}")
+    
         
 def daily_alert_comment_detector(bucket_name, video_ids: list):
     try:
@@ -145,7 +149,10 @@ def daily_alert_comment_detector(bucket_name, video_ids: list):
                                     insert_bad_comments_in_db(video_name, alert_nature, comment, message["authorName"], message["authorID"], message["publishedAt"])
                                     break
             else:
-                print(f"Blob {destination_blob_name} not found")               
+                print(f"Blob {destination_blob_name} not found")
+        
+        get_result_in_pdf()            
+    
     except Exception as e:
         print(f"An error occurred: {e}")
 

@@ -226,25 +226,47 @@ def extract_for_result():
         print(f"An error occurred when trying to extract results from db: {e}")
         
 def get_result_in_pdf():
-    pdf = SimpleDocTemplate('result.pdf', pagesize=letter)
+    # pdf = SimpleDocTemplate('result.pdf', pagesize=letter)
+    pdf = SimpleDocTemplate('result.pdf', pagesize=letter, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     elements = []
     styles = getSampleStyleSheet()
     styleN = styles['Normal']
+    styleN.fontSize = 8
+    styleN.wordWrap = 'CJK'
     
     data = extract_for_result()
-    columns = ['Author name', 'Author ID', 'Count of bad comments', 'Video(s)', 'Alert nature', 'Comment(s)', 'Published at']
+    if not data:
+        print("No data returned from tables extraction.")
+        return
+    columns = ['Author', 'Author ID', 'Count', 'Video', 'Alert', 'Comment', 'Published at']
     dataframe = pd.DataFrame(data=data, columns=columns)
+    # print(f"Dataframe HEAD : {dataframe.head()}")
     
-    data = [[Paragraph(str(item), styleN) if isinstance(item, str) else item for item in row] for row in dataframe.values]
-    data.insert(0, [Paragraph(str(col), styles['Heading4']) for col in dataframe.columns])  # Entêtes de colonnes
+    data_for_table = []
+    headers = [Paragraph('<b>{}</b>'.format(str(col)), styles['Heading4']) for col in columns]
+    data_for_table.append(headers)
+    
+    for idx, row in dataframe.iterrows():
+        row_data = [Paragraph(str(item), styleN) if not isinstance(item, list) else Paragraph('<br/>'.join(str(x) for x in item), styleN) for item in row]
+        data_for_table.append(row_data)
+    
+    # print(f"Data for table : \n{data_for_table[:2]}")
+    # def custom_str(item):
+    #     if isinstance(item, list):
+    #         return ', '.join(map(str, item))
+    #     return str(item)
+    
+    # data = [[Paragraph(custom_str(item), styleN) if isinstance(item, str) else item for item in row] for row in dataframe.values]
+    # data.insert(0, [Paragraph('<b>{}</b>'.format(str(col)), styles['Heading4']) for col in dataframe.columns])  # Entêtes de colonnes
 
-    table = Table(data)
+    table = Table(data_for_table, colWidths=[100, 100, 30, 100, 50, 140, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), '#d3d3d3'),
         ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 1, 'black'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elements.append(table)
     pdf.build(elements)

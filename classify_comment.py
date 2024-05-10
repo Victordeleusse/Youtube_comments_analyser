@@ -90,9 +90,9 @@ def get_comment_translated(comment: str):
     print(f"Splitted translated message : {splited_translated_message}")
     return splited_translated_message
 
-if __name__ == "__main__":
-    comment = "J'aime beaucoup son physique et sa force de travail est vraiment impressionnante mais il ne fera jamais carriere dans ce monde la : il utilise des produits dopants depuis trop longtemps."
-    get_comment_translated(comment)
+# if __name__ == "__main__":
+#     comment = "J'aime beaucoup son physique et sa force de travail est vraiment impressionnante mais il ne fera jamais carriere dans ce monde la : il utilise des produits dopants depuis trop longtemps."
+#     get_comment_translated(comment)
 #     liste = comment_translator(comment, model_name)
 #     for com in liste:
 #     # res_label, res_score = get_label_classification(comment, model_name)
