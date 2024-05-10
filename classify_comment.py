@@ -1,12 +1,12 @@
 import os
 from dotenv import load_dotenv
-load_dotenv()
 import re
 # from scipy.spatial.distance import cosine
 # from langchain_community.llms import Ollama
 # from langchain_community.embeddings import OllamaEmbeddings
+# from run_ollama_analysis import *
 
-from run_ollama_analysis import *
+load_dotenv()
 
 model_name = os.getenv("BASE_LLM_MODEL")
 embedding_model_name = os.getenv("BASE_EMBEDDING_MODEL")
@@ -59,7 +59,6 @@ def remove_emoji(comment: str):
 #     return splited_translated_message
 
 
-
 # Load model directly
 from transformers import pipeline
 classifier_label = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
@@ -90,7 +89,6 @@ def get_comment_translated(comment: str):
         i += 1
     print(f"Splitted translated message : {splited_translated_message}")
     return splited_translated_message
-
 
 if __name__ == "__main__":
     comment = "J'aime beaucoup son physique et sa force de travail est vraiment impressionnante mais il ne fera jamais carriere dans ce monde la : il utilise des produits dopants depuis trop longtemps."

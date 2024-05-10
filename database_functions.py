@@ -28,11 +28,16 @@ def read_table(table_name: str):
     try:
         with connect_to_db() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name)))
-                rows = cursor.fetchall()
-                for row in rows:
-                    print(row)
-                cursor.close()
+                cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"),[table_name])
+                table_exists = cursor.fetchone()[0]
+                if table_exists:
+                    cursor.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name)))
+                    rows = cursor.fetchall()
+                    for row in rows:
+                        print(row)
+                    cursor.close()
+                else:
+                    print(f"Table {table_name} doesn't exist.")
             # conn.close()
     except Exception as e:
         print(f"An error as occured when reading {table_name} in the database : {e}")
@@ -44,8 +49,8 @@ def clear_table(table_name: str):
                 cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)"),[table_name])
                 table_exists = cursor.fetchone()[0]
                 if table_exists:
-                            cursor.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(table_name)))
-                            cursor.close()
+                    cursor.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(table_name)))
+                    cursor.close()
             # conn.close()
     except Exception as e:
         print(f"An error as occured when deleting data from {table_name} in the database : {e}")
@@ -126,9 +131,9 @@ def insert_bad_comments_in_db(
                 # Check if the comment already exists
                 cursor.execute(
                     sql.SQL(
-                        "SELECT COUNT(*) FROM {} WHERE video_title = %s AND authorName = %s AND publishedAt = %s"
+                        "SELECT COUNT(*) FROM {} WHERE video_title = %s AND authorName = %s AND text = %s"
                     ).format(sql.Identifier(table_name)),
-                    [video_title, authorName, publishedAt],
+                    [video_title, authorName, text],
                 )
                 if cursor.fetchone()[0] == 0:
                     cursor.execute(sql.SQL(
@@ -168,7 +173,6 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
         if not table_exists:
             cursor.execute(sql.SQL("CREATE TABLE {} (bad_viewer_id INT PRIMARY KEY, authorName TEXT NOT NULL, authorID TEXT NOT NULL, count INT)").format(sql.Identifier(table_name)))
             print(f"Table {table_name} created.")
-
         cursor.execute(sql.SQL("SELECT count FROM {} WHERE authorName = %s").format(sql.Identifier(table_name)), [authorName])
         result = cursor.fetchone()
         if result:
@@ -183,3 +187,18 @@ def handle_bad_viewer_in_db(cursor, authorName: str, authorID: str):
     except Exception as e:
         print(f"An error occurred with bad viewer: {e}")
         
+
+def extract_for_result():
+    try:
+        with connect_to_db() as conn:
+            with conn.cursor() as cursor:
+                table_name_b = "bad_comments_table"
+                cursor.execute(sql.SQL("SELECT EXISTS (SELECT FROM information_schema.table WHERE table_name = %s)"), [table_name_bv])
+                table_exists = cursor.fetchone[0]
+                if not table_exists:
+                    print(f"Table {table_name_b} doesn't exist : No bad viewrs.")
+                    return
+                table_name_bv = "bad_viewers"
+                cursor.execute(sql.SQL("SELECT b.authorName, b.authorID, bv.count, array.agg(b.video_title) AS video_titles, array.agg(b.alertNature) AS alertNatures, arr.aggregate(b.text) AS texts, arr.aggregate(b.publishedAt) AS publishedAts FROM {} b INNER JOIN {} bv ON b.authorName = bv.authorName AND b.authorID = bv.authorID GROUP BY b.authorname, b.authorID, bv.cout").format(sql.Identifier(table_name_b, table_name_bv)))
+    except Exception as e:
+        print(f"An error occurred when trying to extract results from db: {e}")

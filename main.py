@@ -9,9 +9,9 @@ video_ids = [os.getenv("VIDEO_ID_1"), os.getenv("VIDEO_ID_2")]
 youtube_owner_name = os.getenv("TF_VAR_NAME")
 
 if __name__ == "__main__":
-    read_table('videos_table')
-    clear_table('videos_table')
-    clear_table('bad_comments_table')
-    clear_table('bad_viewers')
+    # read_table('videos_table')
+    # clear_table('videos_table')
+    # clear_table('bad_comments_table')
+    # clear_table('bad_viewers')
     first_upload_to_gcs(youtube_owner_name, video_ids, api_key)
     

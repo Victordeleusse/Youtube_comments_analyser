@@ -47,7 +47,6 @@ def alert_comment_detector(bucket_name, video_ids: list):
         # clear_table('bad_viewers')
         # check_if_model_is_available(embedding_model_name)
         # check_if_model_is_available(model_name)
-        
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         for video in video_ids:
@@ -183,8 +182,8 @@ t1 = PythonOperator(
 
 if __name__ == "__main__":
     print("Launching ... \n ")
-    # alert_comment_detector(youtube_owner_name, video_ids)
-    daily_alert_comment_detector(youtube_owner_name, video_ids)
+    alert_comment_detector(youtube_owner_name, video_ids)
+    # daily_alert_comment_detector(youtube_owner_name, video_ids)
     print(f"\n videos_table \n")
     read_table('videos_table')
     print(f"\n bad_comments_table \n")
