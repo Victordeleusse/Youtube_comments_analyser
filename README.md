@@ -79,3 +79,7 @@ https://huggingface.co/sileod/deberta-v3-large-tasksource-nli?candidate_labels=s
 - Behaviour :
 https://huggingface.co/KoalaAI/OffensiveSpeechDetector?text=In+my+opinion%2C+he+is+no+longer+the+best+French+bodybuilder.+He+has+been+surpassed+by+St%C3%A9phane+Matela.+Despite+this+not+being+the+same+category.
 
+
+### 3. SQL query and result
+
+After analyzing and classifying comments from different videos, a grouping occurs on tables *bad_comments_table* and *bad_viewers*, and the analysis results are then extracted in PDF format to the path specified in the .env file

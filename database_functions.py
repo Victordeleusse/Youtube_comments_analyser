@@ -6,7 +6,6 @@ import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
-# import numpy as np
 
 load_dotenv()
 
@@ -226,8 +225,8 @@ def extract_for_result():
         print(f"An error occurred when trying to extract results from db: {e}")
         
 def get_result_in_pdf():
-    # pdf = SimpleDocTemplate('result.pdf', pagesize=letter)
-    pdf = SimpleDocTemplate('result.pdf', pagesize=letter, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
+    extraction_path = os.getenv('EXTRACT_RESULT_PATH')
+    pdf = SimpleDocTemplate(extraction_path, pagesize=letter, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     elements = []
     styles = getSampleStyleSheet()
     styleN = styles['Normal']
