@@ -237,7 +237,7 @@ def get_result_in_pdf():
     if not data:
         print("No data returned from tables extraction.")
         return
-    columns = ['Author', 'Author ID', 'Count', 'Video', 'Alert', 'Comment', 'Published at']
+    columns = ['Author', 'Author ID', 'Nb', 'Video', 'Alert', 'Comment', 'Published at']
     dataframe = pd.DataFrame(data=data, columns=columns)
     # print(f"Dataframe HEAD : {dataframe.head()}")
     
@@ -258,7 +258,7 @@ def get_result_in_pdf():
     # data = [[Paragraph(custom_str(item), styleN) if isinstance(item, str) else item for item in row] for row in dataframe.values]
     # data.insert(0, [Paragraph('<b>{}</b>'.format(str(col)), styles['Heading4']) for col in dataframe.columns])  # Entêtes de colonnes
 
-    table = Table(data_for_table, colWidths=[100, 100, 30, 100, 50, 140, 60])
+    table = Table(data_for_table, colWidths=[70, 100, 30, 100, 50, 170, 60])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), '#d3d3d3'),
         ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),
