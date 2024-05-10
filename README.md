@@ -79,7 +79,7 @@ https://huggingface.co/sileod/deberta-v3-large-tasksource-nli?candidate_labels=s
 - Behaviour :
 https://huggingface.co/KoalaAI/OffensiveSpeechDetector?text=In+my+opinion%2C+he+is+no+longer+the+best+French+bodybuilder.+He+has+been+surpassed+by+St%C3%A9phane+Matela.+Despite+this+not+being+the+same+category.
 
-Initially, i wanted to use prompt engineering and 
+Initially, I wanted to use prompt engineering methods with LangChain by calling on models imported from Ollama, but the effectiveness of such a method did not prove satisfactory, and the memory requirements for such a process were too significant.
 
 
 ### 3. SQL query and result
